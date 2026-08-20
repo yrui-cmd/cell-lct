@@ -1,0 +1,23 @@
+{
+  "name": "miaohui-xinsheng",
+  "version": "0.1.0",
+  "description": "在 Adobe Illustrator 当前画板中生成、重绘和续画可编辑科研矢量图。",
+  "author": {
+    "name": "描绘心声项目"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "描绘心声",
+    "shortDescription": "在当前画板中生成可编辑科研矢量图",
+    "longDescription": "上传参考图片或描述研究内容，在当前 Adobe Illustrator 画板中生成、重绘和继续添加可编辑科研矢量图，同时保留已有内容。",
+    "developerName": "描绘心声项目",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": [
+      "使用描绘心声，在当前画板右上角绘制一个可编辑科研矢量素材。",
+      "使用描绘心声，根据上传的参考图片在当前画板中重绘。",
+      "使用描绘心声，继续添加科研图形并保留全部已有内容。"
+    ],
+    "brandColor": "#2457C5"
+  }
+}

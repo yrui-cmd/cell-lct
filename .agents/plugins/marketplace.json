@@ -1,0 +1,20 @@
+{
+  "name": "miaohui-xinsheng-tools",
+  "interface": {
+    "displayName": "描绘心声工具"
+  },
+  "plugins": [
+    {
+      "name": "miaohui-xinsheng",
+      "source": {
+        "source": "local",
+        "path": "./plugins/miaohui-xinsheng"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Design"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "描绘心声"
+  short_description: "在当前画板中生成、重绘并续画可编辑科研矢量图形，同时保留已有内容"
+  default_prompt: "Use $miaohui-xinsheng to create an editable scientific vector figure in my current Illustrator canvas."
