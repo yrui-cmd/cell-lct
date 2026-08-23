@@ -24,3 +24,8 @@ private/
 .env.*
 *.key
 *.pem
+*.dpapi
+
+# Runtime caches and generated jobs
+.lct-internal/
+shibielujing*/

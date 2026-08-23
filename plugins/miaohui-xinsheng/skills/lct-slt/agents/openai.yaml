@@ -1,0 +1,4 @@
+interface:
+  display_name: "LCT-SLT 科研矢量"
+  short_description: "生成、重绘并交付可编辑科研矢量图，以及常用兼容格式文件"
+  default_prompt: "Use $lct-slt to create or reconstruct an editable scientific vector figure."

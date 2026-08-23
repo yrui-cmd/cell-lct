@@ -5,7 +5,25 @@ description: Create, recreate, and continue drawing editable scientific vector f
 
 # 描绘心声
 
-Create clean, editable scientific vector artwork in the Illustrator document the user already opened.
+Portable entry point for the bundled `lct-all` workflow.
+
+## Required routing
+
+1. Read and follow the bundled `../lct-all/SKILL.md` before every drawing job. It is authoritative.
+2. Read the bundled `../lct-slt/SKILL.md` and `../lct-ht/SKILL.md` when the authoritative workflow routes to them.
+3. Never substitute a flattened image, local image tracing, or an old SVG for the required fresh vector result.
+
+## First-use setup
+
+- The user opens Adobe Illustrator and the target document. Do not control the Illustrator window.
+- If the Xiaomiao key is not configured, run `../lct-slt/scripts/set-xiaomiao-key.ps1` in an interactive terminal and provide the key through hidden standard input. Never place it in a command line, log, repository file, task output, or delivered artifact.
+- Verify the connection with `../lct-slt/scripts/xiaomiao.ps1 verify` before the first paid request.
+
+## Execution entry
+
+For one PNG, JPEG, or WebP reference, use `../lct-all/scripts/run_from_image.ps1`. Supply the requested placement and output root. The script creates the required sequential deliverables and invokes the bundled vector and Illustrator runtime.
+
+For a text-only request, first create one clean flat-2D reference image that follows the style contract below, then use the same image entry. For an already approved true-vector SVG, use the lower-level command defined by `lct-all` directly.
 
 ## Interaction
 
