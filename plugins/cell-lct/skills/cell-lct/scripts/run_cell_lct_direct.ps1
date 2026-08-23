@@ -34,7 +34,7 @@ param(
 
     [string]$AtomicBatchJson,
 
-    [string]$GroupName = 'LCT_HT_Runtime_SVG',
+    [string]$GroupName = 'CELL_LCT_DIRECT_Runtime_SVG',
     [string]$IllustratorProgId = 'Illustrator.Application.30'
 )
 
@@ -48,10 +48,10 @@ if ([IO.Path]::GetExtension($resolvedInput) -ne '.svg') {
 $inputDirectory = [IO.Path]::GetDirectoryName($resolvedInput)
 $inputStem = [IO.Path]::GetFileNameWithoutExtension($resolvedInput)
 if ([string]::IsNullOrWhiteSpace($OutputAi)) {
-    $OutputAi = [IO.Path]::Combine($inputDirectory, "${inputStem}_lct_ht.ai")
+    $OutputAi = [IO.Path]::Combine($inputDirectory, "${inputStem}_cell_lct.ai")
 }
 if ([string]::IsNullOrWhiteSpace($OutputPng)) {
-    $OutputPng = [IO.Path]::Combine($inputDirectory, "${inputStem}_lct_ht.png")
+    $OutputPng = [IO.Path]::Combine($inputDirectory, "${inputStem}_cell_lct.png")
 }
 
 $OutputAi = [IO.Path]::GetFullPath($OutputAi)
@@ -63,7 +63,7 @@ foreach ($outputPath in @($OutputAi, $OutputPng)) {
     }
 }
 
-$runtimePath = Join-Path $PSScriptRoot 'lct_ht_runtime.jsx'
+$runtimePath = Join-Path $PSScriptRoot 'cell_lct_direct_runtime.jsx'
 if (-not (Test-Path -LiteralPath $runtimePath)) {
     throw "Runtime JSX is missing: $runtimePath"
 }
@@ -93,7 +93,7 @@ $configuration = [ordered]@{
 
 $configJson = $configuration | ConvertTo-Json -Compress -Depth 8
 $runtimeJson = (($runtimePath -replace '\\', '/') | ConvertTo-Json -Compress)
-$bootstrap = "var LCT_HT_CONFIG = $configJson; $.evalFile(new File($runtimeJson));"
+$bootstrap = "var CELL_LCT_DIRECT_CONFIG = $configJson; $.evalFile(new File($runtimeJson));"
 
 $illustrator = $null
 try {

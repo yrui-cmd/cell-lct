@@ -1,4 +1,0 @@
-interface:
-  display_name: "LCT All"
-  short_description: "生成并续画可编辑科研矢量图，同时完整保留当前画板已有内容"
-  default_prompt: "Use $lct-all to create or recreate an editable scientific vector figure in my current canvas."

@@ -1,9 +1,9 @@
 (function () {
-  if (typeof LCT_CACHED_CONFIG === "undefined") {
-    return "ERROR|Missing LCT_CACHED_CONFIG";
+  if (typeof CELL_LCT_CACHED_CONFIG === "undefined") {
+    return "ERROR|Missing CELL_LCT_CACHED_CONFIG";
   }
 
-  var config = LCT_CACHED_CONFIG;
+  var config = CELL_LCT_CACHED_CONFIG;
 
   function readJson(path) {
     var file = new File(path);
@@ -49,6 +49,7 @@
     var group = findNamedGroup(container, name);
     if (group !== null) return group;
     var collections = [container.pathItems, container.compoundPathItems];
+    try { collections.push(container.textFrames); } catch (ignoredTextCollection) {}
     for (var collectionIndex = 0; collectionIndex < collections.length; collectionIndex += 1) {
       var collection = collections[collectionIndex];
       for (var index = 0; index < collection.length; index += 1) {
@@ -62,12 +63,14 @@
   }
 
   function paintItemName(atom, paintIndex) {
+    if (atom.kind === "text") return atom.objectName;
     if (atom.paintParts.length === 1) return atom.objectName;
     return atom.objectName + "_P" + paintIndex;
   }
 
   function atomIsComplete(container, atom) {
     if (findNamedArtwork(container, atom.objectName) !== null) return true;
+    if (atom.kind === "text") return false;
     if (atom.paintParts.length === 1) return false;
     for (var paintIndex = 0; paintIndex < atom.paintParts.length; paintIndex += 1) {
       if (findNamedArtwork(container, paintItemName(atom, paintIndex)) === null) return false;
@@ -193,6 +196,56 @@
       else if (style.strokeJoin === "bevel") destination.strokeJoin = StrokeJoin.BEVELENDJOIN;
       else destination.strokeJoin = StrokeJoin.MITERENDJOIN;
       destination.strokeMiterLimit = style.strokeMiterLimit;
+    }
+  }
+
+  function resolveTextFont(textStyle) {
+    var preferred = textStyle.fontFamily || "Arial";
+    try { return app.textFonts.getByName(preferred); } catch (ignoredExactFont) {}
+    var preferredLower = preferred.toLowerCase();
+    var wantsBold = (textStyle.fontWeight || "").indexOf("bold") >= 0 || parseInt(textStyle.fontWeight, 10) >= 600;
+    var wantsItalic = (textStyle.fontStyle || "").indexOf("italic") >= 0 || (textStyle.fontStyle || "").indexOf("oblique") >= 0;
+    var familyFallback = null;
+    for (var fontIndex = 0; fontIndex < app.textFonts.length; fontIndex += 1) {
+      try {
+        var candidate = app.textFonts[fontIndex];
+        var candidateFamily = (candidate.family || candidate.name || "").toLowerCase();
+        if (candidateFamily !== preferredLower && (candidate.name || "").toLowerCase() !== preferredLower) continue;
+        if (familyFallback === null) familyFallback = candidate;
+        var styleLower = (candidate.style || "").toLowerCase();
+        var candidateBold = styleLower.indexOf("bold") >= 0;
+        var candidateItalic = styleLower.indexOf("italic") >= 0 || styleLower.indexOf("oblique") >= 0;
+        if (candidateBold === wantsBold && candidateItalic === wantsItalic) return candidate;
+      } catch (ignoredFont) {}
+    }
+    return familyFallback;
+  }
+
+  function createText(atom, parent, stagingLayer, viewBox, scale, originLeft, originTop) {
+    var textStyle = atom.text;
+    var position = mapPoint(textStyle.position, viewBox, scale, originLeft, originTop);
+    var created = stagingLayer.textFrames.pointText(position);
+    try {
+      created.contents = textStyle.contents;
+      var range = created.textRange;
+      range.characterAttributes.size = textStyle.fontSize * scale;
+      range.characterAttributes.fillColor = rgbColor(textStyle.fillColor);
+      var resolvedFont = resolveTextFont(textStyle);
+      if (resolvedFont !== null) range.characterAttributes.textFont = resolvedFont;
+      if (textStyle.letterSpacing && textStyle.fontSize) {
+        range.characterAttributes.tracking = Math.round((textStyle.letterSpacing / textStyle.fontSize) * 1000);
+      }
+      if (textStyle.textAnchor === "middle") range.paragraphAttributes.justification = Justification.CENTER;
+      else if (textStyle.textAnchor === "end") range.paragraphAttributes.justification = Justification.RIGHT;
+      else range.paragraphAttributes.justification = Justification.LEFT;
+      created.opacity = textStyle.opacity;
+      if (textStyle.rotationDegrees) created.rotate(-textStyle.rotationDegrees);
+      created.move(parent, ElementPlacement.PLACEATEND);
+      created.zOrder(ZOrderMethod.BRINGTOFRONT);
+      return created;
+    } catch (error) {
+      try { created.remove(); } catch (cleanupError) {}
+      throw error;
     }
   }
 
@@ -412,12 +465,18 @@
       }
       var createdItems = [];
       try {
-        for (var paintIndex = 0; paintIndex < atom.paintParts.length; paintIndex += 1) {
-          var itemName = paintItemName(atom, paintIndex);
-          if (findNamedArtwork(batchGroup, itemName) !== null) continue;
-          var createdItem = createPaint(atom, atom.paintParts[paintIndex], batchGroup, targetLayer, viewBox, scale, origin[0], origin[1]);
-          createdItem.name = itemName;
-          createdItems.push(createdItem);
+        if (atom.kind === "text") {
+          var createdText = createText(atom, batchGroup, targetLayer, viewBox, scale, origin[0], origin[1]);
+          createdText.name = atom.objectName;
+          createdItems.push(createdText);
+        } else {
+          for (var paintIndex = 0; paintIndex < atom.paintParts.length; paintIndex += 1) {
+            var itemName = paintItemName(atom, paintIndex);
+            if (findNamedArtwork(batchGroup, itemName) !== null) continue;
+            var createdItem = createPaint(atom, atom.paintParts[paintIndex], batchGroup, targetLayer, viewBox, scale, origin[0], origin[1]);
+            createdItem.name = itemName;
+            createdItems.push(createdItem);
+          }
         }
         createdCount += 1;
         app.redraw();

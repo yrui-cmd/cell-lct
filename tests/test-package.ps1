@@ -5,19 +5,19 @@ param()
 
 $ErrorActionPreference = "Stop"
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$pluginRoot = Join-Path $repoRoot "plugins\miaohui-xinsheng"
+$pluginRoot = Join-Path $repoRoot "plugins\cell-lct"
 $skillsRoot = Join-Path $pluginRoot "skills"
-$requiredSkills = @("miaohui-xinsheng", "lct-all", "lct-slt", "lct-ht")
+$requiredSkills = @("cell-lct")
 
 foreach ($relativePath in @(
     ".agents\plugins\marketplace.json",
     "install.ps1",
-    "plugins\miaohui-xinsheng\.codex-plugin\plugin.json",
-    "plugins\miaohui-xinsheng\skills\lct-all\scripts\run_lct_all.ps1",
-    "plugins\miaohui-xinsheng\skills\lct-all\scripts\run_from_image.ps1",
-    "plugins\miaohui-xinsheng\skills\lct-slt\scripts\xiaomiao.ps1",
-    "plugins\miaohui-xinsheng\skills\lct-slt\scripts\vectorize-xiaomiao.ps1",
-    "plugins\miaohui-xinsheng\skills\lct-ht\scripts\run_lct_ht.ps1"
+    "plugins\cell-lct\.codex-plugin\plugin.json",
+    "plugins\cell-lct\skills\cell-lct\scripts\run_cell_lct.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\run_from_image.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\xiaomiao.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\vectorize-xiaomiao.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\run_cell_lct_direct.ps1"
 )) {
     $path = Join-Path $repoRoot $relativePath
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -26,12 +26,12 @@ foreach ($relativePath in @(
 }
 
 $manifest = Get-Content -LiteralPath (Join-Path $pluginRoot ".codex-plugin\plugin.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($manifest.name -ne "miaohui-xinsheng" -or $manifest.skills -ne "./skills/") {
+if ($manifest.name -ne "cell-lct" -or $manifest.skills -ne "./skills/") {
     throw "Plugin manifest does not expose the bundled skills correctly."
 }
 
 $marketplace = Get-Content -LiteralPath (Join-Path $repoRoot ".agents\plugins\marketplace.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-if (-not ($marketplace.plugins | Where-Object { $_.name -eq "miaohui-xinsheng" })) {
+if (-not ($marketplace.plugins | Where-Object { $_.name -eq "cell-lct" })) {
     throw "Marketplace entry is missing."
 }
 
@@ -65,7 +65,7 @@ function Invoke-Python([string[]]$Arguments) {
 }
 
 $tempBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\') + '\'
-$tempRoot = Join-Path $tempBase ("miaohui-package-test-" + [Guid]::NewGuid().ToString("N"))
+$tempRoot = Join-Path $tempBase ("cell-lct-package-test-" + [Guid]::NewGuid().ToString("N"))
 $resolvedTempRoot = [IO.Path]::GetFullPath($tempRoot)
 if (-not $resolvedTempRoot.StartsWith($tempBase, [StringComparison]::OrdinalIgnoreCase)) {
     throw "Temporary test directory escaped the system temporary root."
@@ -81,16 +81,21 @@ try {
     }
 
     $fixture = Join-Path $repoRoot "tests\fixtures\simple.svg"
-    $validator = Join-Path $skillsRoot "lct-slt\scripts\validate_vector_svg.py"
+    $validator = Join-Path $skillsRoot "cell-lct\scripts\validate_vector_svg.py"
     Invoke-Python @($validator, "--svg", $fixture)
 
     $cacheRoot = Join-Path $resolvedTempRoot "cache"
-    $cacheBuilder = Join-Path $skillsRoot "lct-all\scripts\prepare_geometry_cache.py"
+    $cacheBuilder = Join-Path $skillsRoot "cell-lct\scripts\prepare_geometry_cache.py"
     Invoke-Python @($cacheBuilder, "--input", $fixture, "--output-dir", $cacheRoot, "--job-id", "package-smoke")
     foreach ($cacheFile in @("geometry-cache.json", "playback.json")) {
         if (-not (Test-Path -LiteralPath (Join-Path $cacheRoot $cacheFile) -PathType Leaf)) {
             throw "Geometry-cache smoke test did not create $cacheFile."
         }
+    }
+    $geometryCache = Get-Content -LiteralPath (Join-Path $cacheRoot "geometry-cache.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+    $editableText = $geometryCache.atoms | Where-Object { $_.kind -eq "text" -and $_.text.contents -eq "Cell-lct" }
+    if (-not $editableText) {
+        throw "Geometry-cache smoke test did not preserve the editable text atom."
     }
 }
 finally {

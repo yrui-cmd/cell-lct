@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate vector structure and raster contamination in an LCT-SLT master SVG."""
+"""Validate vector structure and raster contamination in a Cell-lct master SVG."""
 
 from __future__ import annotations
 
@@ -115,7 +115,7 @@ def audit_svg(svg_path: Path, strict_ids: bool, allow_raster: bool) -> dict[str,
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate an LCT-SLT figure_master.svg.")
+    parser = argparse.ArgumentParser(description="Validate a Cell-lct figure_master.svg.")
     parser.add_argument("--svg", required=True, type=Path)
     parser.add_argument("--report", type=Path)
     parser.add_argument("--strict-ids", action="store_true")

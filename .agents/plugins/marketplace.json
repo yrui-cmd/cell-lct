@@ -1,14 +1,14 @@
 {
-  "name": "miaohui-xinsheng-tools",
+  "name": "cell-lct-tools",
   "interface": {
-    "displayName": "描绘心声工具"
+    "displayName": "Cell-lct"
   },
   "plugins": [
     {
-      "name": "miaohui-xinsheng",
+      "name": "cell-lct",
       "source": {
         "source": "local",
-        "path": "./plugins/miaohui-xinsheng"
+        "path": "./plugins/cell-lct"
       },
       "policy": {
         "installation": "AVAILABLE",

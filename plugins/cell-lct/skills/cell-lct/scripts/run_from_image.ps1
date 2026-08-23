@@ -36,10 +36,8 @@ $outputRootPath = [IO.Path]::GetFullPath($OutputRoot)
 New-Item -ItemType Directory -Force -Path $outputRootPath | Out-Null
 
 $allocator = Join-Path $PSScriptRoot "allocate_shibielujing_name.py"
-$runner = Join-Path $PSScriptRoot "run_lct_all.ps1"
-$lctAllRoot = Split-Path $PSScriptRoot -Parent
-$skillsRoot = Split-Path $lctAllRoot -Parent
-$vectorizer = Join-Path $skillsRoot "lct-slt\scripts\vectorize-xiaomiao.ps1"
+$runner = Join-Path $PSScriptRoot "run_cell_lct.ps1"
+$vectorizer = Join-Path $PSScriptRoot "vectorize-xiaomiao.ps1"
 foreach ($required in @($allocator, $runner, $vectorizer)) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
         throw "Missing required runtime file: $required"
@@ -52,7 +50,7 @@ if ($baseName -notmatch '^shibielujing\d+$') {
 }
 
 $jobRoot = Join-Path $outputRootPath $baseName
-$internalRoot = Join-Path $jobRoot ".lct-internal\live-cache"
+$internalRoot = Join-Path $jobRoot ".cell-lct-internal\live-cache"
 $outputSvg = Join-Path $jobRoot "$baseName.svg"
 $outputAi = Join-Path $jobRoot "$baseName.ai"
 $outputPng = Join-Path $jobRoot "$baseName.png"

@@ -1,8 +1,8 @@
-# LCT All workflow
+# Cell-lct workflow
 
 ## 1. Generate one master SVG
 
-Use `lct-slt` as the only vector-generation source. The result must be a fresh, complete SVG with native paths and no embedded raster. When reconstructing a supplied reference, apply the `lct-slt` cleanup and restoration rules before Illustrator playback.
+Use the bundled Cell-lct vector-generation stage as the only subject-vector source. The result must be a fresh, complete SVG with native paths and no embedded raster. When reconstructing a supplied reference, apply the Cell-lct cleanup and restoration rules before Illustrator playback.
 
 The generated master and all public job outputs use one allocated `shibielujingN` basename.
 

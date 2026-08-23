@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parse one path-compatible SVG once and prepare resumable cached playback batches."""
+"""Parse one Cell-lct SVG once and prepare resumable cached playback batches."""
 
 from __future__ import annotations
 
@@ -20,16 +20,18 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.svgLib.path import parse_path
 
 
-ALLOWED_ATOMS = {"path", "rect", "circle", "ellipse", "line", "polyline", "polygon"}
+ALLOWED_ATOMS = {"path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "text"}
 CONTAINERS = {"svg", "g", "a", "switch"}
 FORBIDDEN = {
-    "image", "text", "tspan", "textPath", "clipPath", "mask", "filter",
+    "image", "tspan", "textPath", "clipPath", "mask", "filter",
     "linearGradient", "radialGradient", "pattern", "foreignObject", "script", "use",
 }
 INHERITED_PRESENTATION = {
     "color", "fill", "fill-opacity", "fill-rule", "stroke", "stroke-opacity",
     "stroke-width", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit",
     "stroke-dasharray", "stroke-dashoffset", "vector-effect", "visibility",
+    "font-family", "font-size", "font-style", "font-weight", "text-anchor",
+    "dominant-baseline", "letter-spacing",
 }
 DEFAULT_PRESENTATION = {
     "color": "black",
@@ -46,6 +48,13 @@ DEFAULT_PRESENTATION = {
     "stroke-dashoffset": "0",
     "vector-effect": "none",
     "visibility": "visible",
+    "font-family": "Arial",
+    "font-size": "16",
+    "font-style": "normal",
+    "font-weight": "normal",
+    "text-anchor": "start",
+    "dominant-baseline": "alphabetic",
+    "letter-spacing": "0",
 }
 NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 TRANSFORM_RE = re.compile(r"([A-Za-z]+)\s*\(([^)]*)\)")
@@ -389,6 +398,47 @@ def paint_parts(presentation: dict[str, str], accumulated_opacity: float, stroke
 
 
 def parse_atom(element: ET.Element, transform: Transform, presentation: dict[str, str], opacity: float, index: int) -> dict | None:
+    if local_name(element.tag) == "text":
+        content = "".join(element.itertext())
+        if not content:
+            return None
+        current_color = presentation.get("color", "black")
+        fill_color, fill_alpha = parse_color(presentation.get("fill", "black"), current_color)
+        text_opacity = opacity * opacity_value(presentation.get("fill-opacity")) * fill_alpha
+        if fill_color is None or text_opacity <= 0:
+            return None
+        x = parse_number(element.get("x"), 0.0) or 0.0
+        y = parse_number(element.get("y"), 0.0) or 0.0
+        mapped_x, mapped_y = transform.transformPoint((x, y))
+        determinant = transform.xx * transform.yy - transform.xy * transform.yx
+        text_scale = math.sqrt(abs(determinant)) if determinant else 1.0
+        font_size = (parse_number(presentation.get("font-size"), 16.0) or 16.0) * text_scale
+        letter_spacing = (parse_number(presentation.get("letter-spacing"), 0.0) or 0.0) * text_scale
+        font_family = presentation.get("font-family", "Arial").split(",", 1)[0].strip().strip("'\"") or "Arial"
+        source_id = element.get("id") or f"source_atom_{index:06d}"
+        return {
+            "kind": "text",
+            "index": index,
+            "sourceId": source_id,
+            "objectName": f"CELL_LCT_CACHE_ATOM_{index:06d}",
+            "text": {
+                "contents": content,
+                "position": [rounded(mapped_x), rounded(mapped_y)],
+                "fontSize": rounded(font_size),
+                "fontFamily": font_family,
+                "fontWeight": presentation.get("font-weight", "normal").strip().lower(),
+                "fontStyle": presentation.get("font-style", "normal").strip().lower(),
+                "textAnchor": presentation.get("text-anchor", "start").strip().lower(),
+                "dominantBaseline": presentation.get("dominant-baseline", "alphabetic").strip().lower(),
+                "letterSpacing": rounded(letter_spacing),
+                "rotationDegrees": rounded(math.degrees(math.atan2(transform.xy, transform.xx))),
+                "fillColor": fill_color,
+                "opacity": rounded(text_opacity * 100.0),
+            },
+            "paintParts": [],
+            "complexity": 1,
+        }
+
     determinant = transform.xx * transform.yy - transform.xy * transform.yx
     stroke_scale = math.sqrt(abs(determinant)) if determinant else 1.0
     parts = paint_parts(presentation, opacity, stroke_scale)
@@ -402,9 +452,10 @@ def parse_atom(element: ET.Element, transform: Transform, presentation: dict[str
     complexity = sum(len(subpath["points"]) for subpath in subpaths)
     source_id = element.get("id") or f"source_atom_{index:06d}"
     return {
+        "kind": "path",
         "index": index,
         "sourceId": source_id,
-        "objectName": f"LCT_CACHE_ATOM_{index:06d}",
+        "objectName": f"CELL_LCT_CACHE_ATOM_{index:06d}",
         "subpaths": subpaths,
         "paintParts": parts,
         "complexity": complexity,
@@ -520,7 +571,7 @@ def build_batches(atoms: list[dict], job_id: str, min_size: int, max_size: int, 
         batches.append({
             "index": batch_index,
             "kind": kind,
-            "group_name": f"LCT_CACHE_{job_id}_{batch_index:04d}",
+            "group_name": f"CELL_LCT_CACHE_{job_id}_{batch_index:04d}",
             "atom_indices": indices,
             "atomic_count": len(indices),
             "complexity": sum(atoms[index]["complexity"] for index in indices),
@@ -540,10 +591,10 @@ def validate_batch_contract(batches: list[dict], atoms: list[dict], min_size: in
         kind = batch["kind"]
         if kind == "complex":
             if count != 1:
-                raise ValueError("A complex batch must contain exactly one path atom")
+                raise ValueError("A complex batch must contain exactly one atom")
             atom_index = int(batch["atom_indices"][0])
             if int(atoms[atom_index]["complexity"]) < complex_threshold:
-                raise ValueError("Only a genuinely complex path atom may be a singleton batch")
+                raise ValueError("Only a genuinely complex atom may be a singleton batch")
             continue
         if not min_size <= count <= max_size:
             raise ValueError(f"Ordinary batch size {count} is outside {min_size}..{max_size}")
@@ -564,7 +615,7 @@ def prepare(input_svg: Path, output_dir: Path, job_id: str, min_size: int, max_s
         cache = json.loads(cache_path.read_text(encoding="utf-8-sig"))
         state = json.loads(state_path.read_text(encoding="utf-8-sig"))
         compatible = (
-            cache.get("schema_version") == 2
+            cache.get("schema_version") == 3
             and cache.get("source_sha256") == source_hash
             and cache.get("job_id") == job_id
             and cache.get("min_batch_size") == min_size
@@ -587,7 +638,7 @@ def prepare(input_svg: Path, output_dir: Path, job_id: str, min_size: int, max_s
     batches = build_batches(atoms, job_id, min_size, max_size, complex_threshold, max_points)
     validate_batch_contract(batches, atoms, min_size, max_size, complex_threshold)
     cache = {
-        "schema_version": 2,
+        "schema_version": 3,
         "created_at": utc_now(),
         "source_svg": str(input_svg),
         "source_sha256": source_hash,
@@ -604,7 +655,7 @@ def prepare(input_svg: Path, output_dir: Path, job_id: str, min_size: int, max_s
     write_json_atomic(cache_path, cache)
     cache_hash = sha256_file(cache_path)
     state = {
-        "schema_version": 2,
+        "schema_version": 3,
         "created_at": utc_now(),
         "updated_at": utc_now(),
         "source_svg": str(input_svg),
@@ -612,7 +663,7 @@ def prepare(input_svg: Path, output_dir: Path, job_id: str, min_size: int, max_s
         "cache_file": str(cache_path),
         "cache_sha256": cache_hash,
         "job_id": job_id,
-        "root_group_name": f"LCT_CACHE_JOB_{job_id}",
+        "root_group_name": f"CELL_LCT_CACHE_JOB_{job_id}",
         "total_atoms": len(atoms),
         "batches": [
             {

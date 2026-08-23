@@ -8,9 +8,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$sourceRoot = Join-Path $PSScriptRoot "plugins\miaohui-xinsheng\skills"
+$sourceRoot = Join-Path $PSScriptRoot "plugins\cell-lct\skills"
 $destinationRoot = [IO.Path]::GetFullPath($Destination)
-$skillNames = @("miaohui-xinsheng", "lct-all", "lct-slt", "lct-ht")
+$skillNames = @("cell-lct")
 
 if (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) {
     throw "Plugin skill directory is missing: $sourceRoot"

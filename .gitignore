@@ -27,5 +27,5 @@ private/
 *.dpapi
 
 # Runtime caches and generated jobs
-.lct-internal/
+.cell-lct-internal/
 shibielujing*/

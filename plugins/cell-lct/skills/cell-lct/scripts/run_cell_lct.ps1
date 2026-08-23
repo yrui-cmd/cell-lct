@@ -67,7 +67,7 @@ if ([string]::IsNullOrWhiteSpace($jobId)) { $jobId = 'job' }
 if ($jobId.Length -gt 48) { $jobId = $jobId.Substring(0, 48) }
 
 $prepareScript = Join-Path $PSScriptRoot 'prepare_geometry_cache.py'
-$runtimePath = Join-Path $PSScriptRoot 'lct_cached_runtime.jsx'
+$runtimePath = Join-Path $PSScriptRoot 'cell_lct_cached_runtime.jsx'
 foreach ($required in @($prepareScript, $runtimePath)) {
     if (-not (Test-Path -LiteralPath $required)) { throw "Missing required file: $required" }
 }
@@ -119,7 +119,7 @@ function ConvertTo-JsJson([object]$value) {
 function Invoke-CachedRuntime([object]$illustrator, [object]$configuration) {
     $configJson = ConvertTo-JsJson $configuration
     $runtimeJson = (($runtimePath -replace '\\', '/') | ConvertTo-Json -Compress)
-    $bootstrap = "var LCT_CACHED_CONFIG = $configJson; `$`.evalFile(new File($runtimeJson));"
+    $bootstrap = "var CELL_LCT_CACHED_CONFIG = $configJson; `$`.evalFile(new File($runtimeJson));"
     return [string]$illustrator.DoJavaScript($bootstrap)
 }
 
@@ -399,7 +399,7 @@ try {
         throw 'QA_FAILED|The expected AI or final PNG file is missing.'
     }
     $mode = if ($continued) { 'continued' } else { 'fresh' }
-    Write-Output "LCT_ALL_COMPLETE|cache=$cachePath|ai=$OutputAi|png=$OutputPng|batches=$completedCount/$($state.batches.Count)|mode=$mode|illustrator_window_untouched=true"
+    Write-Output "CELL_LCT_COMPLETE|cache=$cachePath|ai=$OutputAi|png=$OutputPng|batches=$completedCount/$($state.batches.Count)|mode=$mode|illustrator_window_untouched=true"
 } finally {
     if (Test-Path -LiteralPath $batchPayloadPath) {
         Remove-Item -LiteralPath $batchPayloadPath -Force -ErrorAction SilentlyContinue

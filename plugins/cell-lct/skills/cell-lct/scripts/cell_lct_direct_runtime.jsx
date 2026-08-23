@@ -1,9 +1,9 @@
 (function () {
-  if (typeof LCT_HT_CONFIG === "undefined") {
-    return "ERROR|Missing LCT_HT_CONFIG|0|configuration";
+  if (typeof CELL_LCT_DIRECT_CONFIG === "undefined") {
+    return "ERROR|Missing CELL_LCT_DIRECT_CONFIG|0|configuration";
   }
 
-  var config = LCT_HT_CONFIG;
+  var config = CELL_LCT_DIRECT_CONFIG;
   var sourceDoc = null;
   var destinationGroup = null;
   var targetDoc = null;
@@ -351,7 +351,7 @@
     if (!batchMode) {
       context = "non-ui geometry preflight";
       var validationGroup = sourceDoc.activeLayer.groupItems.add();
-      validationGroup.name = "LCT_HT_NON_UI_PREFLIGHT";
+      validationGroup.name = "CELL_LCT_NON_UI_PREFLIGHT";
       for (var validationIndex = replayStart; validationIndex < replayEnd; validationIndex += 1) {
         context = "non-ui preflight object " + validationIndex + " of " + atomicItems.length;
         createAtomic(atomicItems[validationIndex], validationGroup, sourceBounds, 1, sourceBounds[0], sourceBounds[1]);

@@ -1,37 +1,30 @@
-# 描绘心声
+# Cell-lct
 
 **Science Speaks in Vectors**
 
-面向 Codex Desktop 与 Adobe Illustrator 2026 的科研矢量绘图插件。它可以根据文字或参考图片生成真 SVG，并把可编辑原生路径追加到用户已经打开的 Illustrator 文档中，同时保留已有内容。
+Cell-lct 是面向 Codex Desktop 与 Adobe Illustrator 2026 的科研矢量绘图插件。它根据文字或参考图片生成真 SVG，并把可编辑原生路径和可编辑文字追加到用户已经打开的 Illustrator 文档中，同时保留已有内容。
 
 > 本项目为独立第三方工具，与 Adobe 无隶属、赞助或官方认可关系。
 
-## 仓库现在包含什么
+## 包含内容
 
-- `miaohui-xinsheng`：面向用户的统一入口 Skill。
-- `lct-all`：完整绘图编排与当前画板续画流程。
-- `lct-slt`：科研图生成、参考图重建、SVG 验证及小描连接。
-- `lct-ht`：Illustrator 2026 原生可编辑路径写入运行时。
-- `install.ps1`：把全部 Skill 一次安装到本机 Codex。
-- Codex 插件清单与仓库 Marketplace 清单。
+公开包只安装一个统一 Skill：`cell-lct`。图片转换、结构验证、缓存播放、Illustrator 路径写入和可编辑文字均由该 Skill 内部完成，不需要再单独安装其他 Skill。
 
 API Key 不在仓库中，也不会写入生成文件；首次配置时使用 Windows DPAPI 加密后保存在当前 Windows 用户目录。
 
 ## 给另一台电脑上的 Codex：一句话安装
 
-把下面整句发给 Codex：
-
 ```text
-请克隆 https://github.com/yrui-cmd/miaohui-xinsheng，检查后运行仓库根目录 install.ps1 安装全部 Skill；随后以隐藏输入方式运行 lct-slt/scripts/set-xiaomiao-key.ps1 配置我接下来提供的 API Key，验证连接成功后提醒我重启 Codex并新建任务，然后使用 $miaohui-xinsheng 根据我上传的文字或图片在当前 Illustrator 画板开始作图。
+请克隆 https://github.com/yrui-cmd/cell-lct，检查后运行仓库根目录 install.ps1 安装 Cell-lct；随后以隐藏输入方式运行 scripts/set-xiaomiao-key.ps1 配置我接下来提供的 API Key，验证连接成功后提醒我重启 Codex 并新建任务，然后使用 $cell-lct 根据我上传的文字或图片在当前 Illustrator 画板开始作图。
 ```
 
-不要把真实 API Key 写入上述公开文本、Git 提交、Issue 或截图；在 Codex 请求输入时单独提供。
+不要把真实 API Key 写进公开提示词、Git 提交、Issue 或截图；在 Codex 请求隐藏输入时单独提供。
 
 ## 手动安装
 
 ```powershell
-git clone https://github.com/yrui-cmd/miaohui-xinsheng.git
-Set-Location .\miaohui-xinsheng
+git clone https://github.com/yrui-cmd/cell-lct.git
+Set-Location .\cell-lct
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
@@ -45,24 +38,16 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Force
 
 ```powershell
 codex plugin marketplace add .
-codex plugin add miaohui-xinsheng@miaohui-xinsheng-tools
+codex plugin add cell-lct@cell-lct-tools
 ```
 
 安装或更新后，请重新启动 Codex 并新建任务。
 
 ## 首次配置
 
-1. 打开交互终端，运行：
-
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\plugins\miaohui-xinsheng\skills\lct-slt\scripts\set-xiaomiao-key.ps1
-```
-
-2. 在隐藏输入提示中粘贴 API Key 并按 Enter。
-3. 验证连接：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\plugins\miaohui-xinsheng\skills\lct-slt\scripts\xiaomiao.ps1 verify
+powershell -ExecutionPolicy Bypass -File .\plugins\cell-lct\skills\cell-lct\scripts\set-xiaomiao-key.ps1
+powershell -ExecutionPolicy Bypass -File .\plugins\cell-lct\skills\cell-lct\scripts\xiaomiao.ps1 verify
 ```
 
 ## 使用前准备
@@ -72,23 +57,23 @@ powershell -ExecutionPolicy Bypass -File .\plugins\miaohui-xinsheng\skills\lct-s
 - Python 3，可通过 `py -3` 调用。
 - Adobe Illustrator 2026。
 - 用户已自行打开目标 AI 文档。
-- 有效的小描 API Key 与可用额度。
+- 有效的 API Key 与可用额度。
 
-插件不会启动、重启、关闭、置顶或调整 Illustrator 窗口，只负责向当前已经打开的文档追加绘图。
+Cell-lct 不会启动、重启、关闭、置顶或调整 Illustrator 窗口，只负责向当前已经打开的文档追加绘图。
 
 ## 开始作图
 
 ```text
-使用 $miaohui-xinsheng，在当前画板右上角画一个小兔子。保留全部已有内容。
+使用 $cell-lct，在当前画板右上角画一个小兔子。保留全部已有内容。
 ```
 
 参考图片重绘：
 
 ```text
-使用 $miaohui-xinsheng，参考我上传的图片，在当前画板中上方重绘。保留全部已有内容，不要覆盖文字。
+使用 $cell-lct，参考我上传的图片，在当前画板中上方重绘。保留全部已有内容，不要覆盖文字。
 ```
 
-上传 PNG、JPG、JPEG 或 WebP 后，插件会强制进入随包提供的 `lct-all` 流程并调用已配置的小描连接；如果密钥未配置或验证失败，它会停止并要求完成配置，不会静默改用本地描摹、旧 SVG 或位图包装。
+上传 PNG、JPG、JPEG 或 WebP 后，Cell-lct 会强制调用已配置的转换服务生成新的真矢量 SVG；密钥未配置或验证失败时会停止并要求配置，不会静默改用本地描摹、旧 SVG 或位图包装。已经验证为真矢量的 SVG 不重复转换。
 
 暂停与继续：
 
@@ -100,20 +85,12 @@ powershell -ExecutionPolicy Bypass -File .\plugins\miaohui-xinsheng\skills\lct-s
 继续完成刚才的绘图，保留全部已经完成的内容。
 ```
 
-## 统一科研绘图提示词
+## 科研绘图提示词
 
 ```text
-使用 $miaohui-xinsheng。
+使用 $cell-lct。
 
-你是一名经验丰富的科研绘图设计师。请根据我提供的研究内容，绘制符合顶级期刊标准的 BioRender 风格科研配图，并严格遵守以下规范：
-
-1. 采用清晰的科研矢量插画风格，避免照片感和写实感。
-2. 使用纯白色背景和扁平化 2D 设计，禁止任何 3D 渲染。
-3. 禁止使用光影渐变、镜面反射、复杂纹理、电影级光效、立体阴影及其他写实效果。
-4. 整体保持简约、整洁，所有线条干净流畅，颜色使用纯色色块平涂。
-5. 构图、配色、比例、留白和信息层级应符合行业顶级期刊的科研绘图标准。
-6. 全图中的同类事物必须保持绝对一致，包括颜色、形状、大小、比例、线宽、结构和内部细节。
-7. 所有重复小元素必须分别绘制为彼此独立的单个图形，不得相互连接、融合、共用外轮廓或连成一个整体。
+你是一名经验丰富的科研绘图设计师。请根据我提供的研究内容，绘制符合顶级期刊标准的 BioRender 风格科研配图：采用清晰的矢量插画、纯白背景和扁平化 2D 设计；禁止照片感、3D 渲染、复杂纹理、镜面反射和写实阴影；保持线条干净、色块平涂、层级清晰。同类事物的颜色、形状、大小、比例、线宽、结构和细节必须一致；所有重复小元素必须分别保持为独立可编辑对象。文字必须保留为 Illustrator 可编辑文字对象。
 
 绘图内容：【填写研究内容或对象】
 绘制位置：【填写画板位置】
@@ -130,8 +107,7 @@ powershell -ExecutionPolicy Bypass -File .\plugins\miaohui-xinsheng\skills\lct-s
 - 开始前先保存重要 AI 文档备份。
 - 如果提示 Illustrator 不可用，请自行打开 Illustrator 2026 和目标文档后重试。
 - 如果提示密钥未配置，请重新运行 `set-xiaomiao-key.ps1`。
-- 如果提示额度不足，请停止重复请求并检查小描账户额度。
-- 提交 Issue 时请提供系统、Codex 与 Illustrator 版本、去敏后的提示词和截图。
+- 如果提示额度不足，请停止重复请求并检查账户额度。
 
 ## 商标说明
 
