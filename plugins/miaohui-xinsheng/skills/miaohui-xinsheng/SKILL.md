@@ -12,6 +12,8 @@ Portable entry point for the bundled `lct-all` workflow.
 1. Read and follow the bundled `../lct-all/SKILL.md` before every drawing job. It is authoritative.
 2. Read the bundled `../lct-slt/SKILL.md` and `../lct-ht/SKILL.md` when the authoritative workflow routes to them.
 3. Never substitute a flattened image, local image tracing, or an old SVG for the required fresh vector result.
+4. Treat every newly uploaded PNG, JPEG, or WebP as a mandatory `lct-all` job. Do not bypass the bundled Xiaomiao adapter, use a built-in image generator as the final vector source, or hand-author a replacement SVG.
+5. Before a paid request, verify that the bundled Xiaomiao adapter is authenticated. If it is not configured, stop with the one required setup request instead of silently choosing another drawing route.
 
 ## First-use setup
 
@@ -21,7 +23,9 @@ Portable entry point for the bundled `lct-all` workflow.
 
 ## Execution entry
 
-For one PNG, JPEG, or WebP reference, use `../lct-all/scripts/run_from_image.ps1`. Supply the requested placement and output root. The script creates the required sequential deliverables and invokes the bundled vector and Illustrator runtime.
+For one complete semantic subject in PNG, JPEG, or WebP form, use `../lct-all/scripts/run_from_image.ps1`. Supply the requested placement and output root. The script creates the required sequential deliverables and invokes the bundled vector and Illustrator runtime.
+
+For a multi-object scientific figure, follow the authoritative `lct-all` and `lct-slt` reconstruction workflow: preserve the reference layout, prepare the required complete semantic assets, send each required asset through the bundled Xiaomiao adapter, assemble one fresh master SVG, and then run the bundled `lct-all` playback. Do not send the untouched composite directly through the single-subject shortcut.
 
 For a text-only request, first create one clean flat-2D reference image that follows the style contract below, then use the same image entry. For an already approved true-vector SVG, use the lower-level command defined by `lct-all` directly.
 

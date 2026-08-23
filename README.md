@@ -88,6 +88,8 @@ powershell -ExecutionPolicy Bypass -File .\plugins\miaohui-xinsheng\skills\lct-s
 使用 $miaohui-xinsheng，参考我上传的图片，在当前画板中上方重绘。保留全部已有内容，不要覆盖文字。
 ```
 
+上传 PNG、JPG、JPEG 或 WebP 后，插件会强制进入随包提供的 `lct-all` 流程并调用已配置的小描连接；如果密钥未配置或验证失败，它会停止并要求完成配置，不会静默改用本地描摹、旧 SVG 或位图包装。
+
 暂停与继续：
 
 ```text
