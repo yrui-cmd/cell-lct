@@ -3,5 +3,5 @@
   <path id="background" d="M2 2H118V78H2Z" fill="#FFFFFF" stroke="#2457C5" stroke-width="2"/>
   <path id="cell" d="M24 40C24 22 42 14 60 20C78 14 96 22 96 40C96 58 78 66 60 60C42 66 24 58 24 40Z" fill="#DCEBFF" stroke="#2457C5" stroke-width="2"/>
   <path id="nucleus" d="M48 40C48 32 53 28 60 28C67 28 72 32 72 40C72 48 67 52 60 52C53 52 48 48 48 40Z" fill="#7B61C8" stroke="#4C2F91" stroke-width="2"/>
-  <text id="editable-label" x="60" y="72" fill="#142A5C" font-family="Arial" font-size="8" font-weight="bold" text-anchor="middle">Cell-lct Next</text>
+  <text id="editable-label" x="60" y="72" fill="#142A5C" font-family="Arial" font-size="8" font-weight="bold" text-anchor="middle">Cell-lct</text>
 </svg>

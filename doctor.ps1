@@ -7,7 +7,7 @@ param(
     [switch]$SkipIllustrator,
     [switch]$RequireIllustratorOpen,
     [switch]$Json,
-    [string]$SkillRoot = "$env:USERPROFILE\.codex\skills\cell-lct-next",
+    [string]$SkillRoot = "$env:USERPROFILE\.codex\skills\cell-lct",
     [string]$SecretPath = "$env:USERPROFILE\.codex\secrets\xiaomiao-api-key.dpapi"
 )
 
@@ -39,7 +39,7 @@ if (-not (Test-Path -LiteralPath $lockPath -PathType Leaf)) {
 $lock = Get-Content -LiteralPath $lockPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
 if ($env:OS -eq "Windows_NT") { Add-Check "windows" "PASS" "Windows detected." $true }
-else { Add-Check "windows" "FAIL" "Cell-lct Next stable supports Windows only." $true }
+else { Add-Check "windows" "FAIL" "Cell-lct stable supports Windows only." $true }
 
 if ($PSVersionTable.PSVersion -ge [version]"5.1") { Add-Check "powershell" "PASS" $PSVersionTable.PSVersion.ToString() $true }
 else { Add-Check "powershell" "FAIL" "PowerShell 5.1 or newer is required." $true }
@@ -123,7 +123,7 @@ if (-not $SkipApi) {
 }
 
 $summary = [pscustomobject]@{
-    product = "Cell-lct Next"
+    product = "Cell-lct"
     version = [string]$lock.release
     ok = -not $fatal
     checks = $results

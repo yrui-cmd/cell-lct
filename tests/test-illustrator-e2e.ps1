@@ -4,7 +4,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [switch]$ConfirmDisposableOpenDocument,
-    [string]$OutputDirectory = "$env:TEMP\cell-lct-next-illustrator-e2e"
+    [string]$OutputDirectory = "$env:TEMP\cell-lct-illustrator-e2e"
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,7 +13,7 @@ if (-not $ConfirmDisposableOpenDocument) {
 }
 
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$skillRoot = Join-Path $repoRoot "plugins\cell-lct-next\skills\cell-lct-next"
+$skillRoot = Join-Path $repoRoot "plugins\cell-lct\skills\cell-lct"
 $inputSvg = Join-Path $repoRoot "tests\fixtures\simple.svg"
 $outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
@@ -24,13 +24,13 @@ if (-not $before) { throw "Illustrator must already be open; this test will not 
 & (Join-Path $skillRoot "scripts\run_cell_lct.ps1") `
     -InputSvg $inputSvg `
     -WorkDir (Join-Path $outputRoot "cache") `
-    -OutputAi (Join-Path $outputRoot "cell-lct-next-e2e.ai") `
-    -OutputPng (Join-Path $outputRoot "cell-lct-next-e2e.png") `
+    -OutputAi (Join-Path $outputRoot "cell-lct-e2e.ai") `
+    -OutputPng (Join-Path $outputRoot "cell-lct-e2e.png") `
     -MinBatchSize 20 `
     -MaxBatchSize 50
 
 if ($LASTEXITCODE -ne 0) { throw "Illustrator end-to-end playback failed." }
-foreach ($path in @((Join-Path $outputRoot "cell-lct-next-e2e.ai"), (Join-Path $outputRoot "cell-lct-next-e2e.png"))) {
+foreach ($path in @((Join-Path $outputRoot "cell-lct-e2e.ai"), (Join-Path $outputRoot "cell-lct-e2e.png"))) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Expected Illustrator output is missing: $path" }
 }
 

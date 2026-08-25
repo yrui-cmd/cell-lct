@@ -27,7 +27,7 @@ private/
 *.dpapi
 
 # Runtime caches and generated jobs
-.cell-lct-next-internal/
+.cell-lct-internal/
 .test-tmp/
 .dry-run/
 .dry-run-out/

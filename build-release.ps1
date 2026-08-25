@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = [IO.Path]::GetFullPath($PSScriptRoot)
-$manifestPath = Join-Path $repoRoot "plugins\cell-lct-next\.codex-plugin\plugin.json"
+$manifestPath = Join-Path $repoRoot "plugins\cell-lct\.codex-plugin\plugin.json"
 $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($manifest.version -ne $Version) { throw "Manifest version $($manifest.version) does not match requested release $Version." }
 if (Test-Path -LiteralPath (Join-Path $repoRoot ".agents\plugins\marketplace.json")) { throw "Marketplace entry is forbidden in this release." }
@@ -22,8 +22,8 @@ if (-not $SkipTests) {
 
 $distRoot = Join-Path $repoRoot "dist"
 $tempRoot = Join-Path $repoRoot ".release-tmp"
-$stageRoot = Join-Path $tempRoot ("cell-lct-next-v" + $Version)
-$zipPath = Join-Path $distRoot ("cell-lct-next-v" + $Version + ".zip")
+$stageRoot = Join-Path $tempRoot ("cell-lct-v" + $Version)
+$zipPath = Join-Path $distRoot ("cell-lct-v" + $Version + ".zip")
 $hashPath = "$zipPath.sha256"
 
 if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
@@ -35,7 +35,7 @@ Get-ChildItem -LiteralPath $repoRoot -Force | Where-Object { $excludedTop -notco
 }
 
 $releaseManifest = [ordered]@{
-    product = "Cell-lct Next"
+    product = "Cell-lct"
     version = $Version
     tag = "v$Version"
     createdUtc = [DateTime]::UtcNow.ToString("o")

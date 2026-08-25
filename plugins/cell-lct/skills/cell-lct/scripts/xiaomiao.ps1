@@ -142,7 +142,7 @@ switch ($Action) {
         $bodyBytes = $null
         $response = $null
         try {
-            $boundary = "cell-lct-next-$([Guid]::NewGuid().ToString('N'))"
+            $boundary = "cell-lct-$([Guid]::NewGuid().ToString('N'))"
             $crlf = "`r`n"
             $prefix = "--$boundary$crlf" +
                 "Content-Disposition: form-data; name=`"image`"; filename=`"$($fileInfo.Name)`"$crlf" +

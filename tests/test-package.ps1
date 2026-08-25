@@ -5,10 +5,10 @@ param()
 
 $ErrorActionPreference = "Stop"
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$pluginRoot = Join-Path $repoRoot "plugins\cell-lct-next"
+$pluginRoot = Join-Path $repoRoot "plugins\cell-lct"
 $skillsRoot = Join-Path $pluginRoot "skills"
-$skillRoot = Join-Path $skillsRoot "cell-lct-next"
-$requiredSkills = @("cell-lct-next")
+$skillRoot = Join-Path $skillsRoot "cell-lct"
+$requiredSkills = @("cell-lct")
 
 foreach ($relativePath in @(
     "install.ps1",
@@ -17,20 +17,20 @@ foreach ($relativePath in @(
     "build-release.ps1",
     "requirements.lock",
     "runtime-lock.json",
-    "plugins\cell-lct-next\.codex-plugin\plugin.json",
-    "plugins\cell-lct-next\skills\cell-lct-next\SKILL.md",
-    "plugins\cell-lct-next\skills\cell-lct-next\scripts\run_cell_lct.ps1",
-    "plugins\cell-lct-next\skills\cell-lct-next\scripts\run_from_image.ps1",
-    "plugins\cell-lct-next\skills\cell-lct-next\scripts\merge_live_text.py",
-    "plugins\cell-lct-next\skills\cell-lct-next\scripts\xiaomiao.ps1",
-    "plugins\cell-lct-next\skills\cell-lct-next\scripts\vectorize-xiaomiao.ps1"
+    "plugins\cell-lct\.codex-plugin\plugin.json",
+    "plugins\cell-lct\skills\cell-lct\SKILL.md",
+    "plugins\cell-lct\skills\cell-lct\scripts\run_cell_lct.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\run_from_image.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\merge_live_text.py",
+    "plugins\cell-lct\skills\cell-lct\scripts\xiaomiao.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\vectorize-xiaomiao.ps1"
 )) {
     $path = Join-Path $repoRoot $relativePath
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Required package file is missing: $relativePath" }
 }
 
 $manifest = Get-Content -LiteralPath (Join-Path $pluginRoot ".codex-plugin\plugin.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($manifest.name -ne "cell-lct-next" -or $manifest.version -ne "0.2.0" -or $manifest.skills -ne "./skills/") {
+if ($manifest.name -ne "cell-lct" -or $manifest.version -ne "0.2.0" -or $manifest.skills -ne "./skills/") {
     throw "Plugin manifest identity or stable version is incorrect."
 }
 
@@ -97,7 +97,7 @@ New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 try {
     $installRoot = Join-Path $tempRoot "skills"
     & (Join-Path $repoRoot "install.ps1") -Destination $installRoot
-    if (-not (Test-Path -LiteralPath (Join-Path $installRoot "cell-lct-next\SKILL.md") -PathType Leaf)) { throw "Install smoke test failed." }
+    if (-not (Test-Path -LiteralPath (Join-Path $installRoot "cell-lct\SKILL.md") -PathType Leaf)) { throw "Install smoke test failed." }
 
     $fixture = Join-Path $repoRoot "tests\fixtures\simple.svg"
     Invoke-Python @((Join-Path $skillRoot "scripts\validate_vector_svg.py"), "--svg", $fixture)
@@ -119,7 +119,7 @@ try {
         if (-not (Test-Path -LiteralPath (Join-Path $cacheRoot $cacheFile) -PathType Leaf)) { throw "Geometry cache did not create $cacheFile." }
     }
     $geometryCache = Get-Content -LiteralPath (Join-Path $cacheRoot "geometry-cache.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-    $editableText = $geometryCache.atoms | Where-Object { $_.kind -eq "text" -and $_.text.contents -eq "Cell-lct Next" }
+    $editableText = $geometryCache.atoms | Where-Object { $_.kind -eq "text" -and $_.text.contents -eq "Cell-lct" }
     if (-not $editableText) { throw "Geometry cache did not preserve the live text atom." }
     if ($geometryCache.atoms | Where-Object { $_.kind -eq "image" }) { throw "Raster atom was found in the geometry cache." }
 
@@ -134,4 +134,4 @@ finally {
     }
 }
 
-Write-Output "PACKAGE_OK|skill=cell-lct-next|version=0.2.0|text=live|cache=validated|secret_scan=clean|marketplace=absent"
+Write-Output "PACKAGE_OK|skill=cell-lct|version=0.2.0|text=live|cache=validated|secret_scan=clean|marketplace=absent"

@@ -14,7 +14,7 @@
   "codex": {
     "requiresDesktopApp": true,
     "requiresBuiltInImage2": true,
-    "skillId": "cell-lct-next"
+    "skillId": "cell-lct"
   },
   "runtimeContracts": {
     "geometryCacheSchema": "1.0",

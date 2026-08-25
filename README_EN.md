@@ -1,6 +1,6 @@
-# Cell-lct Next
+# Cell-lct
 
-Cell-lct Next `v0.2.0` is the stable Windows release for reconstructing editable scientific vectors and live SVG text in a user-opened Adobe Illustrator 2026 document through Codex Desktop.
+Cell-lct `v0.2.0` is the stable Windows release for reconstructing editable scientific vectors and live SVG text in a user-opened Adobe Illustrator 2026 document through Codex Desktop.
 
 ## Stable-release contract
 
@@ -20,8 +20,8 @@ Windows 10/11 x64, Codex Desktop with built-in Image 2 editing, Illustrator 2026
 ## Install from the pinned tag
 
 ```powershell
-git clone --branch v0.2.0 --depth 1 https://github.com/yrui-cmd/cell-lct-next.git
-Set-Location .\cell-lct-next
+git clone --branch v0.2.0 --depth 1 https://github.com/yrui-cmd/cell-lct.git
+Set-Location .\cell-lct
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
@@ -30,7 +30,7 @@ Setup installs the locked dependency, copies the Skill, securely prompts for the
 Restart Codex, create a new task, open Illustrator 2026 and the target document yourself, then invoke:
 
 ```text
-Use $cell-lct-next to reconstruct my uploaded content or image in the current Illustrator canvas while preserving all existing content.
+Use $cell-lct to reconstruct my uploaded content or image in the current Illustrator canvas while preserving all existing content.
 ```
 
 ## Diagnose, test, and build

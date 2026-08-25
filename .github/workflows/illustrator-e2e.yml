@@ -13,4 +13,4 @@ jobs:
         run: py -3 -m pip install --requirement .\requirements.lock
       - name: Require a disposable document and run live playback
         shell: powershell
-        run: .\tests\test-illustrator-e2e.ps1 -ConfirmDisposableOpenDocument -OutputDirectory "$env:RUNNER_TEMP\cell-lct-next-e2e"
+        run: .\tests\test-illustrator-e2e.ps1 -ConfirmDisposableOpenDocument -OutputDirectory "$env:RUNNER_TEMP\cell-lct-e2e"

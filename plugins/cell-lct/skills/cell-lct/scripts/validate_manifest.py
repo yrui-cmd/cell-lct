@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the core Scene Manifest contract for a Cell-lct Next job."""
+"""Validate the core Scene Manifest contract for a Cell-lct job."""
 
 from __future__ import annotations
 
@@ -164,7 +164,7 @@ def audit(path: Path) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a Cell-lct Next manifest.json.")
+    parser = argparse.ArgumentParser(description="Validate a Cell-lct manifest.json.")
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()

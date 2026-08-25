@@ -1,6 +1,6 @@
-# Cell-lct Next
+# Cell-lct
 
-Cell-lct Next `v0.2.0` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2026 的稳定版科研矢量绘图插件。它将参考图重建为可编辑路径和真实 SVG 文本，并续画到用户已经打开的 Illustrator 文档中。
+Cell-lct `v0.2.0` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2026 的稳定版科研矢量绘图插件。它将参考图重建为可编辑路径和真实 SVG 文本，并续画到用户已经打开的 Illustrator 文档中。
 
 ## 稳定版保证
 
@@ -24,8 +24,8 @@ Cell-lct Next `v0.2.0` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2
 ## 从固定 Tag 一键安装
 
 ```powershell
-git clone --branch v0.2.0 --depth 1 https://github.com/yrui-cmd/cell-lct-next.git
-Set-Location .\cell-lct-next
+git clone --branch v0.2.0 --depth 1 https://github.com/yrui-cmd/cell-lct.git
+Set-Location .\cell-lct
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
@@ -40,25 +40,25 @@ powershell -ExecutionPolicy Bypass -File .\setup.ps1 -Force
 安装后重启 Codex，并新建任务。先由用户打开 Illustrator 2026 和目标文档，然后发送：
 
 ```text
-使用 $cell-lct-next，根据我上传的内容或图片在当前 Illustrator 画板中作图，保留全部已有内容。
+使用 $cell-lct，根据我上传的内容或图片在当前 Illustrator 画板中作图，保留全部已有内容。
 ```
 
 ## 从 Release ZIP 安装
 
 下载同一版本的两个文件：
 
-- `cell-lct-next-v0.2.0.zip`
-- `cell-lct-next-v0.2.0.zip.sha256`
+- `cell-lct-v0.2.0.zip`
+- `cell-lct-v0.2.0.zip.sha256`
 
 验证后解压并运行 `setup.ps1`：
 
 ```powershell
-$zip = '.\cell-lct-next-v0.2.0.zip'
+$zip = '.\cell-lct-v0.2.0.zip'
 $expected = ((Get-Content "$zip.sha256") -split '\s+')[0]
 $actual = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($actual -ne $expected) { throw 'SHA256 校验失败，停止安装。' }
-Expand-Archive $zip -DestinationPath .\cell-lct-next-v0.2.0
-Set-Location .\cell-lct-next-v0.2.0\cell-lct-next-v0.2.0
+Expand-Archive $zip -DestinationPath .\cell-lct-v0.2.0
+Set-Location .\cell-lct-v0.2.0\cell-lct-v0.2.0
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
@@ -101,4 +101,4 @@ Illustrator 真机测试会向当前打开的文档写入测试图，只能在�
 
 仓库可以固定 Skill、脚本、依赖、测试和发行文件，但无法把 Codex 内置 Image 2 或 Adobe Illustrator 本体打包进去。另一台电脑要获得一致流程，必须满足 `runtime-lock.json` 中的环境契约，并自行配置 DPAPI API Key。
 
-完整插件源码位于 `plugins/cell-lct-next`，安装器只把其中的 `cell-lct-next` Skill 部署到用户的 Codex Skills 目录。原版 Cell-lct 与 Cell-lct Next 可以并存。
+完整插件源码位于 `plugins/cell-lct`，安装器只把其中的 `cell-lct` Skill 部署到用户的 Codex Skills 目录。原版 Cell-lct 与 Cell-lct 可以并存。

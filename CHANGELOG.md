@@ -2,7 +2,7 @@
 
 ## 0.2.0 - 2026-08-25
 
-- Promoted Cell-lct Next to a stable plugin release.
+- Promoted Cell-lct to a stable plugin release.
 - Added pinned Python and runtime dependency contracts.
 - Added one-command setup and standalone diagnostics.
 - Added Windows package and end-to-end tests plus opt-in Illustrator 2026 live testing.

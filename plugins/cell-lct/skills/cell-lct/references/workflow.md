@@ -1,4 +1,4 @@
-# Cell-lct Next workflow
+# Cell-lct workflow
 
 ## 1. Prepare one complete reference
 

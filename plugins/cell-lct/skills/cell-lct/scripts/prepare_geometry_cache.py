@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parse one Cell-lct Next SVG once and prepare resumable cached playback batches."""
+"""Parse one Cell-lct SVG once and prepare resumable cached playback batches."""
 
 from __future__ import annotations
 

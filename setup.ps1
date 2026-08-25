@@ -27,7 +27,7 @@ if (-not $SkipDependencies) {
 
 & (Join-Path $repoRoot "install.ps1") -Destination $Destination -Force:$Force
 
-$installedSkill = Join-Path ([IO.Path]::GetFullPath($Destination)) "cell-lct-next"
+$installedSkill = Join-Path ([IO.Path]::GetFullPath($Destination)) "cell-lct"
 $secretPath = "$env:USERPROFILE\.codex\secrets\xiaomiao-api-key.dpapi"
 if (-not $SkipApiKey -and -not (Test-Path -LiteralPath $secretPath -PathType Leaf)) {
     & (Join-Path $installedSkill "scripts\set-xiaomiao-key.ps1") -SecretPath $secretPath

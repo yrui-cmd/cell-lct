@@ -15,7 +15,7 @@ try {
     $setupOutput = & (Join-Path $repoRoot "setup.ps1") -Destination $skillDestination -SkipDependencies -SkipApiKey -SkipIllustratorCheck | Out-String
     if ($setupOutput -notmatch "SETUP_OK\|version=0.2.0") { throw "One-click setup did not complete." }
 
-    $installedSkill = Join-Path $skillDestination "cell-lct-next"
+    $installedSkill = Join-Path $skillDestination "cell-lct"
     $doctorOutput = & (Join-Path $repoRoot "doctor.ps1") -SkillRoot $installedSkill -SkipApi -SkipIllustrator | Out-String
     if ($doctorOutput -notmatch "DOCTOR_OK\|version=0.2.0") { throw "Offline diagnostics did not pass." }
 

@@ -55,7 +55,7 @@ if ($baseName -notmatch '^shibielujing\d+$') {
 }
 
 $jobRoot = Join-Path $outputRootPath $baseName
-$internalRoot = Join-Path $jobRoot ".cell-lct-next-internal\live-cache"
+$internalRoot = Join-Path $jobRoot ".cell-lct-internal\live-cache"
 $rawSvg = Join-Path $jobRoot "$baseName-vector.svg"
 $outputSvg = Join-Path $jobRoot "$baseName.svg"
 $outputAi = Join-Path $jobRoot "$baseName.ai"

@@ -107,7 +107,7 @@ def add_text(root: ET.Element, item: dict, viewbox: tuple[float, float, float, f
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Merge live text into a Cell-lct Next Master SVG.")
+    parser = argparse.ArgumentParser(description="Merge live text into a Cell-lct Master SVG.")
     parser.add_argument("--input-svg", required=True)
     parser.add_argument("--text-manifest", required=True)
     parser.add_argument("--output-svg", required=True)
@@ -143,7 +143,7 @@ def main() -> int:
     for paint_order, element in sorted(additions, key=lambda pair: pair[0]):
         root.insert(max(0, min(paint_order, len(root))), element)
 
-    root.set("data-cell-lct-next-text-manifest", manifest_path.name)
+    root.set("data-cell-lct-text-manifest", manifest_path.name)
     output_svg.parent.mkdir(parents=True, exist_ok=True)
     tree.write(output_svg, encoding="utf-8", xml_declaration=True)
     print(json.dumps({"ok": True, "output_svg": str(output_svg), "live_text_count": len(additions)}, ensure_ascii=False))

@@ -1,9 +1,9 @@
 ---
-name: cell-lct-next
+name: cell-lct
 description: Create, reconstruct, and append editable scientific vector figures with live editable text in the user's currently open Adobe Illustrator document. Use for scientific subjects, mechanism diagrams, workflows, graphical abstracts, review figures, reference-image recreation, and continued drawing while preserving existing artwork.
 ---
 
-# Cell-lct Next
+# Cell-lct
 
 Use one fixed workflow:
 
@@ -30,7 +30,7 @@ Read [references/workflow.md](references/workflow.md), [references/workflow-spec
 
 ## Input routing
 
-1. Treat every newly uploaded PNG, JPEG, or WebP as a mandatory Cell-lct Next job. Do not replace the required fresh vector result with local image tracing, a built-in image generator, an old SVG, or a hand-authored substitute.
+1. Treat every newly uploaded PNG, JPEG, or WebP as a mandatory Cell-lct job. Do not replace the required fresh vector result with local image tracing, a built-in image generator, an old SVG, or a hand-authored substitute.
 2. Before any reference image is sent to the vector service, create a text manifest containing every visible text run's content, position, bounding box, font family, font size, font weight, color, rotation, alignment, opacity, z-index, and paint order.
 3. Use Codex Image 2 to remove text only from the complete reference. Preserve arrows and arrow tails, connectors, frames, coordinate axes, heatmaps, legends, scientific subjects, colors, spacing, and the complete layout.
 4. Send the complete text-cleaned reference through the bundled API adapter. Do not force per-subject uploads for a complete reference figure.
