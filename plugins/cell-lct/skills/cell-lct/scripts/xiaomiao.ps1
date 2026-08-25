@@ -136,40 +136,41 @@ switch ($Action) {
             throw "Xiaomiao accepts PNG, JPEG, or WebP files."
         }
 
-        if (-not (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
-            throw "curl.exe is required for Xiaomiao uploads on Windows."
-        }
-
-        $token = Get-XiaomiaoToken
+        $client = New-XiaomiaoClient -Authenticated
+        $bodyContent = $null
+        $imageBytes = $null
+        $bodyBytes = $null
+        $response = $null
         try {
-            # Feed the Authorization header through stdin so the secret never
-            # appears in the curl process command line or in shell history.
-            $marker = "__XIAOMIAO_HTTP_STATUS__"
-            $formValue = "image=@$resolvedImage;type=$($mimeTypes[$extension]);filename=$($fileInfo.Name)"
-            $curlArguments = @(
-                "--silent", "--show-error", "--max-time", "90",
-                "--header", "@-",
-                "--write-out", "`n${marker}:%{http_code}",
-                "--form", $formValue,
-                "--url", "$root/api/images"
-            )
-            $rawOutput = "Authorization: Bearer $token" | & curl.exe @curlArguments 2>&1 | Out-String
-            $curlExitCode = $LASTEXITCODE
-            if ($curlExitCode -ne 0) {
-                throw "Xiaomiao upload transport failed (curl exit $curlExitCode)."
-            }
+            $boundary = "cell-lct-$([Guid]::NewGuid().ToString('N'))"
+            $crlf = "`r`n"
+            $prefix = "--$boundary$crlf" +
+                "Content-Disposition: form-data; name=`"image`"; filename=`"$($fileInfo.Name)`"$crlf" +
+                "Content-Type: $($mimeTypes[$extension])$crlf$crlf"
+            $suffix = "$crlf--$boundary--$crlf"
+            $prefixBytes = [Text.Encoding]::UTF8.GetBytes($prefix)
+            $imageBytes = [IO.File]::ReadAllBytes($resolvedImage)
+            $suffixBytes = [Text.Encoding]::UTF8.GetBytes($suffix)
+            $bodyBytes = [byte[]]::new($prefixBytes.Length + $imageBytes.Length + $suffixBytes.Length)
+            [Buffer]::BlockCopy($prefixBytes, 0, $bodyBytes, 0, $prefixBytes.Length)
+            [Buffer]::BlockCopy($imageBytes, 0, $bodyBytes, $prefixBytes.Length, $imageBytes.Length)
+            [Buffer]::BlockCopy($suffixBytes, 0, $bodyBytes, $prefixBytes.Length + $imageBytes.Length, $suffixBytes.Length)
+            $bodyContent = [Net.Http.ByteArrayContent]::new($bodyBytes)
+            $bodyContent.Headers.TryAddWithoutValidation("Content-Type", "multipart/form-data; boundary=$boundary") | Out-Null
 
-            $match = [regex]::Match($rawOutput, "(?s)^(.*)\r?\n${marker}:(\d{3})\s*$")
-            if (-not $match.Success) { throw "Xiaomiao upload returned an unreadable response." }
-            $body = $match.Groups[1].Value.Trim()
-            $statusCode = [int]$match.Groups[2].Value
-            if ($statusCode -lt 200 -or $statusCode -ge 300) {
-                throw "Xiaomiao upload failed (HTTP ${statusCode}): $(Get-ServerError $body)"
+            $response = $client.PostAsync("$root/api/images", $bodyContent).GetAwaiter().GetResult()
+            $body = Read-ResponseBody $response
+            if (-not $response.IsSuccessStatusCode) {
+                throw "Xiaomiao upload failed (HTTP $([int]$response.StatusCode)): $(Get-ServerError $body)"
             }
             Convert-ResponseJson $body
         }
         finally {
-            $token = $null
+            if ($response) { $response.Dispose() }
+            if ($bodyContent) { $bodyContent.Dispose() }
+            $bodyBytes = $null
+            $imageBytes = $null
+            $client.Dispose()
         }
     }
 

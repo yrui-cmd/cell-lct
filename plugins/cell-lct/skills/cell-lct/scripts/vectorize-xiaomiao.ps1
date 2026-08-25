@@ -49,8 +49,18 @@ if ([string]::IsNullOrWhiteSpace($imageId)) {
 
 $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
 $job = $null
+$lastStatusError = $null
 do {
-    $job = & $adapter status -ImageId $imageId -BaseUrl $BaseUrl
+    try {
+        $job = & $adapter status -ImageId $imageId -BaseUrl $BaseUrl
+        $lastStatusError = $null
+    }
+    catch {
+        $lastStatusError = $_.Exception.Message
+        if ([DateTime]::UtcNow -ge $deadline) { break }
+        Start-Sleep -Seconds $PollSeconds
+        continue
+    }
     $status = [string]$job.status
     if ($status -eq "completed") { break }
     if ($status -in @("failed", "expired", "rejected")) {
@@ -65,9 +75,29 @@ do {
     Start-Sleep -Seconds $PollSeconds
 } while ($true)
 
+if ($null -eq $job -or [string]$job.status -ne "completed") {
+    $suffix = if ($lastStatusError) { " Last status error: $lastStatusError" } else { "" }
+    throw "Xiaomiao job timed out after $TimeoutSeconds seconds.$suffix"
+}
+
 $temporarySvg = "$outputPath.download.$PID"
 try {
-    & $adapter download -ImageId $imageId -OutputPath $temporarySvg -BaseUrl $BaseUrl | Out-Null
+    $downloaded = $false
+    $lastDownloadError = $null
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        try {
+            & $adapter download -ImageId $imageId -OutputPath $temporarySvg -BaseUrl $BaseUrl | Out-Null
+            $downloaded = $true
+            break
+        }
+        catch {
+            $lastDownloadError = $_.Exception.Message
+            if ($attempt -lt 5) { Start-Sleep -Seconds $PollSeconds }
+        }
+    }
+    if (-not $downloaded) {
+        throw "Xiaomiao SVG download failed after retries: $lastDownloadError"
+    }
 
     $validationOutput = & py -3 -X utf8 $validator --svg $temporarySvg 2>&1
     if ($LASTEXITCODE -ne 0) {

@@ -268,7 +268,7 @@ function Assert-CompleteArtwork([object]$illustrator, [string]$documentName) {
   }
   function namedArtwork(container,name){
     var group=namedGroup(container,name);if(group!==null){return group;}
-    var collections=[container.pathItems,container.compoundPathItems];
+    var collections=[container.pathItems,container.compoundPathItems,container.textFrames];
     for(var q=0;q<collections.length;q+=1){
       for(var i=0;i<collections[q].length;i+=1){
         try{var item=collections[q][i];if(item&&item.name===name){return item;}}catch(ignore){}
