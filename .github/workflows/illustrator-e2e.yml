@@ -1,0 +1,16 @@
+name: Illustrator 2026 end-to-end
+
+on:
+  workflow_dispatch:
+
+jobs:
+  illustrator-live:
+    runs-on: [self-hosted, Windows, illustrator-2026]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install locked dependencies
+        shell: powershell
+        run: py -3 -m pip install --requirement .\requirements.lock
+      - name: Require a disposable document and run live playback
+        shell: powershell
+        run: .\tests\test-illustrator-e2e.ps1 -ConfirmDisposableOpenDocument -OutputDirectory "$env:RUNNER_TEMP\cell-lct-next-e2e"

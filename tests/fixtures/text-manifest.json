@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "text_elements": [
+    {
+      "id": "editable-title",
+      "content": "Cell-lct Next",
+      "coordinate_space": "normalized",
+      "x": 0.5,
+      "y": 0.15,
+      "font_family": "Arial",
+      "font_size": 14,
+      "font_weight": "bold",
+      "fill": "#142A5C",
+      "rotation": 0,
+      "text_anchor": "middle",
+      "alignment_baseline": "middle",
+      "opacity": 1,
+      "z_index": 10,
+      "paint_order": 4,
+      "bbox": {"x": 0.34, "y": 0.08, "width": 0.32, "height": 0.12}
+    }
+  ]
+}

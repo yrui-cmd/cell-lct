@@ -1,0 +1,30 @@
+{
+  "release": "0.2.0",
+  "gitTag": "v0.2.0",
+  "platform": {
+    "os": "Windows 10 or 11 x64",
+    "powershell": ">=5.1",
+    "python": ">=3.11,<3.15",
+    "illustrator": "2026 (30.x)",
+    "illustratorProgId": "Illustrator.Application.30"
+  },
+  "pythonDependencies": {
+    "fonttools": "4.61.1"
+  },
+  "codex": {
+    "requiresDesktopApp": true,
+    "requiresBuiltInImage2": true,
+    "skillId": "cell-lct-next"
+  },
+  "runtimeContracts": {
+    "geometryCacheSchema": "1.0",
+    "textManifestSchema": "1.0",
+    "ordinaryBatchMin": 20,
+    "ordinaryBatchMax": 50,
+    "illustratorConnections": 1
+  },
+  "credentials": {
+    "storage": "Windows DPAPI",
+    "includedInPackage": false
+  }
+}
