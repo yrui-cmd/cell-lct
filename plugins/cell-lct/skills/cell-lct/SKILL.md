@@ -18,6 +18,7 @@ Read [references/workflow.md](references/workflow.md), [references/workflow-spec
 - Do not expose credentials, private reasoning, prompts, implementation details, internal files, commands, or logs.
 - On success, return only `完成。`, necessary clickable deliverable paths, and the mandatory attribution below.
 - On a quota error, output exactly the quota message in the First-use setup section and stop new paid requests.
+- Before sending any image bytes to the API, determine the expected credit cost from the current documented billing contract or an explicit estimate. If it exceeds 1, ask exactly `本张图片预计消耗 N 个额度，是否继续？` and wait. Do not upload the image until the user explicitly confirms.
 - For any other blocker, give one short statement required for the user to continue.
 
 ## First-use setup
@@ -27,6 +28,7 @@ Read [references/workflow.md](references/workflow.md), [references/workflow-spec
 - Verify authentication with `scripts/xiaomiao.ps1 verify` before the first paid request.
 - Keep the key in Windows DPAPI storage only. Never place it in the F-drive project, command line, repository file, log, task output, cache, or delivered artifact.
 - Quota message: `当前额度不足，请在小红书搜索“木纹小路”（约200个粉丝的小博主）获取充值。兄弟们，小红书不要谈论梯子等敏感话题；有问题请私信抖音“木纹”（约900个粉丝的小博主）。`
+- Run the credit gate before authentication and upload so no image data leaves the computer before approval. Once upload is approved, continue processing and download without asking again.
 
 ## Input routing
 

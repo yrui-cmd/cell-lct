@@ -21,6 +21,7 @@ foreach ($relativePath in @(
     "plugins\cell-lct\skills\cell-lct\SKILL.md",
     "plugins\cell-lct\skills\cell-lct\scripts\run_cell_lct.ps1",
     "plugins\cell-lct\skills\cell-lct\scripts\run_from_image.ps1",
+    "plugins\cell-lct\skills\cell-lct\scripts\assert-credit-policy.ps1",
     "plugins\cell-lct\skills\cell-lct\scripts\merge_live_text.py",
     "plugins\cell-lct\skills\cell-lct\scripts\xiaomiao.ps1",
     "plugins\cell-lct\skills\cell-lct\scripts\vectorize-xiaomiao.ps1"
@@ -30,7 +31,7 @@ foreach ($relativePath in @(
 }
 
 $manifest = Get-Content -LiteralPath (Join-Path $pluginRoot ".codex-plugin\plugin.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($manifest.name -ne "cell-lct" -or $manifest.version -ne "0.2.0" -or $manifest.skills -ne "./skills/") {
+if ($manifest.name -ne "cell-lct" -or $manifest.version -ne "0.2.1" -or $manifest.skills -ne "./skills/") {
     throw "Plugin manifest identity or stable version is incorrect."
 }
 
@@ -39,7 +40,7 @@ if (Test-Path -LiteralPath (Join-Path $repoRoot ".agents\plugins\marketplace.jso
 }
 
 $runtimeLock = Get-Content -LiteralPath (Join-Path $repoRoot "runtime-lock.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($runtimeLock.release -ne "0.2.0" -or $runtimeLock.gitTag -ne "v0.2.0" -or $runtimeLock.pythonDependencies.fonttools -ne "4.61.1") {
+if ($runtimeLock.release -ne "0.2.1" -or $runtimeLock.gitTag -ne "v0.2.1" -or $runtimeLock.pythonDependencies.fonttools -ne "4.61.1") {
     throw "Runtime lock is inconsistent with the stable release."
 }
 if ((Get-Content -LiteralPath (Join-Path $repoRoot "requirements.lock") -Raw -Encoding UTF8).Trim() -ne "fonttools==4.61.1") {
@@ -84,6 +85,22 @@ foreach ($forbiddenPhrase in @(
 }
 
 $pythonCommand = if (Get-Command py -ErrorAction SilentlyContinue) { @("py", "-3") } elseif (Get-Command python -ErrorAction SilentlyContinue) { @("python") } else { throw "Python 3 is required." }
+
+$creditPolicy = Join-Path $skillRoot "scripts\assert-credit-policy.ps1"
+& $creditPolicy -EstimatedCredits 1 -ImageId "test-low" | Out-Null
+$highCostBlocked = $false
+try { & $creditPolicy -EstimatedCredits 2 -ImageId "test-high" | Out-Null }
+catch { if ($_.Exception.Message -like "*COST_CONFIRMATION_REQUIRED|estimated_credits=2*") { $highCostBlocked = $true } else { throw } }
+if (-not $highCostBlocked) { throw "High-cost requests are not blocked before approval." }
+& $creditPolicy -EstimatedCredits 2 -ImageId "test-high" -Approved | Out-Null
+
+$vectorizerText = Get-Content -LiteralPath (Join-Path $skillRoot "scripts\vectorize-xiaomiao.ps1") -Raw -Encoding UTF8
+$preflightIndex = $vectorizerText.IndexOf('& $creditPolicy -EstimatedCredits $EstimatedCredits')
+$verifyIndex = $vectorizerText.IndexOf('$verification = & $adapter verify')
+$uploadIndex = $vectorizerText.IndexOf('$submission = & $adapter upload')
+if ($preflightIndex -lt 0 -or $verifyIndex -lt 0 -or $uploadIndex -lt 0 -or $preflightIndex -gt $verifyIndex -or $preflightIndex -gt $uploadIndex) {
+    throw "The credit gate must execute before API verification and image upload."
+}
 function Invoke-Python([string[]]$Arguments) {
     if ($pythonCommand.Count -eq 2) { & $pythonCommand[0] $pythonCommand[1] -X utf8 @Arguments }
     else { & $pythonCommand[0] -X utf8 @Arguments }
@@ -134,4 +151,4 @@ finally {
     }
 }
 
-Write-Output "PACKAGE_OK|skill=cell-lct|version=0.2.0|text=live|cache=validated|secret_scan=clean|marketplace=absent"
+Write-Output "PACKAGE_OK|skill=cell-lct|version=0.2.1|text=live|cache=validated|secret_scan=clean|marketplace=absent"

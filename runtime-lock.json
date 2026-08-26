@@ -1,6 +1,6 @@
 {
-  "release": "0.2.0",
-  "gitTag": "v0.2.0",
+  "release": "0.2.1",
+  "gitTag": "v0.2.1",
   "platform": {
     "os": "Windows 10 or 11 x64",
     "powershell": ">=5.1",

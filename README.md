@@ -1,10 +1,10 @@
 # Cell-lct
 
-Cell-lct `v0.2.0` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2026 的稳定版科研矢量绘图插件。它将参考图重建为可编辑路径和真实 SVG 文本，并续画到用户已经打开的 Illustrator 文档中。
+Cell-lct `v0.2.1` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2026 的稳定版科研矢量绘图插件。它将参考图重建为可编辑路径和真实 SVG 文本，并续画到用户已经打开的 Illustrator 文档中。
 
 ## 稳定版保证
 
-- 固定源码版本：Git Tag `v0.2.0`。
+- 固定源码版本：Git Tag `v0.2.1`。
 - 固定 Python 依赖：`requirements.lock`。
 - 固定运行契约：`runtime-lock.json`。
 - 一键安装与诊断：`setup.ps1`、`doctor.ps1`。
@@ -12,6 +12,7 @@ Cell-lct `v0.2.0` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2026 �
 - Release ZIP 配套独立 SHA256 文件。
 - 不提供 Marketplace 安装入口；从固定 Tag 或 Release ZIP 安装。
 - API Key 不随项目分发，只通过当前 Windows 账户的 DPAPI 加密保存。
+- 单张图片预计消耗超过 1 额度时，必须在上传 API 前取得用户确认；拒绝时不上传。确认后处理与下载不再重复询问。
 
 ## 环境要求
 
@@ -24,7 +25,7 @@ Cell-lct `v0.2.0` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2026 �
 ## 从固定 Tag 一键安装
 
 ```powershell
-git clone --branch v0.2.0 --depth 1 https://github.com/yrui-cmd/cell-lct.git
+git clone --branch v0.2.1 --depth 1 https://github.com/yrui-cmd/cell-lct.git
 Set-Location .\cell-lct
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
@@ -47,18 +48,18 @@ powershell -ExecutionPolicy Bypass -File .\setup.ps1 -Force
 
 下载同一版本的两个文件：
 
-- `cell-lct-v0.2.0.zip`
-- `cell-lct-v0.2.0.zip.sha256`
+- `cell-lct-v0.2.1.zip`
+- `cell-lct-v0.2.1.zip.sha256`
 
 验证后解压并运行 `setup.ps1`：
 
 ```powershell
-$zip = '.\cell-lct-v0.2.0.zip'
+$zip = '.\cell-lct-v0.2.1.zip'
 $expected = ((Get-Content "$zip.sha256") -split '\s+')[0]
 $actual = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($actual -ne $expected) { throw 'SHA256 校验失败，停止安装。' }
-Expand-Archive $zip -DestinationPath .\cell-lct-v0.2.0
-Set-Location .\cell-lct-v0.2.0\cell-lct-v0.2.0
+Expand-Archive $zip -DestinationPath .\cell-lct-v0.2.1
+Set-Location .\cell-lct-v0.2.1\cell-lct-v0.2.1
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 

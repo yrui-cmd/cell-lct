@@ -14,6 +14,14 @@ param(
     [ValidateRange(30, 3600)]
     [int]$TimeoutSeconds = 900,
 
+    [ValidateRange(1, 1000000)]
+    [int]$MaxCreditsWithoutConfirmation = 1,
+
+    [ValidateRange(0, 1000000)]
+    [int]$EstimatedCredits = 1,
+
+    [switch]$ApproveHighCost,
+
     [uri]$BaseUrl = "https://xiaomiao-ai.com"
 )
 
@@ -29,11 +37,16 @@ if ($outputDirectory) {
 
 $adapter = Join-Path $PSScriptRoot "xiaomiao.ps1"
 $validator = Join-Path $PSScriptRoot "validate_vector_svg.py"
-foreach ($required in @($adapter, $validator)) {
+$creditPolicy = Join-Path $PSScriptRoot "assert-credit-policy.ps1"
+foreach ($required in @($adapter, $validator, $creditPolicy)) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
         throw "Missing required runtime file: $required"
     }
 }
+
+# This gate runs before authentication or upload so no image bytes leave the
+# computer when a known estimate exceeds the user's threshold.
+& $creditPolicy -EstimatedCredits $EstimatedCredits -MaxWithoutConfirmation $MaxCreditsWithoutConfirmation -ImageId "preflight" -Approved:$ApproveHighCost | Out-Null
 
 # Authentication is checked without charging credits.
 $verification = & $adapter verify -BaseUrl $BaseUrl

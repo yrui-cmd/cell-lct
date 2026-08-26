@@ -1,10 +1,10 @@
 # Cell-lct
 
-Cell-lct `v0.2.0` is the stable Windows release for reconstructing editable scientific vectors and live SVG text in a user-opened Adobe Illustrator 2026 document through Codex Desktop.
+Cell-lct `v0.2.1` is the stable Windows release for reconstructing editable scientific vectors and live SVG text in a user-opened Adobe Illustrator 2026 document through Codex Desktop.
 
 ## Stable-release contract
 
-- Immutable source reference: Git tag `v0.2.0`.
+- Immutable source reference: Git tag `v0.2.1`.
 - Exact Python lock: `requirements.lock`.
 - Runtime contract: `runtime-lock.json`.
 - One-command setup and diagnostics: `setup.ps1` and `doctor.ps1`.
@@ -12,6 +12,7 @@ Cell-lct `v0.2.0` is the stable Windows release for reconstructing editable scie
 - Release ZIP with a separate SHA256 checksum.
 - No Marketplace installation entry; install from the pinned tag or Release ZIP.
 - API credentials are never shipped and are stored with per-user Windows DPAPI.
+- Any image estimated above 1 credit is paused before API upload and requires explicit user approval. Once approved, processing and download continue without another prompt.
 
 ## Requirements
 
@@ -20,7 +21,7 @@ Windows 10/11 x64, Codex Desktop with built-in Image 2 editing, Illustrator 2026
 ## Install from the pinned tag
 
 ```powershell
-git clone --branch v0.2.0 --depth 1 https://github.com/yrui-cmd/cell-lct.git
+git clone --branch v0.2.1 --depth 1 https://github.com/yrui-cmd/cell-lct.git
 Set-Location .\cell-lct
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```

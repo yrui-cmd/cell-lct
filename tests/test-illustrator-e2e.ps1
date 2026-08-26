@@ -36,4 +36,4 @@ foreach ($path in @((Join-Path $outputRoot "cell-lct-e2e.ai"), (Join-Path $outpu
 
 $after = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match "Illustrator" }
 if (-not $after) { throw "Illustrator unexpectedly stopped during the test." }
-Write-Output "ILLUSTRATOR_E2E_OK|version=0.2.0|output=$outputRoot"
+Write-Output "ILLUSTRATOR_E2E_OK|version=0.2.1|output=$outputRoot"

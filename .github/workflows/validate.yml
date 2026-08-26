@@ -28,13 +28,13 @@ jobs:
         shell: powershell
         run: |
           .\build-release.ps1 -SkipTests
-          $zip = '.\dist\cell-lct-v0.2.0.zip'
+          $zip = '.\dist\cell-lct-v0.2.1.zip'
           $expected = ((Get-Content "$zip.sha256") -split '\s+')[0]
           $actual = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actual -ne $expected) { throw 'Release SHA256 mismatch.' }
       - uses: actions/upload-artifact@v4
         with:
-          name: cell-lct-v0.2.0
+          name: cell-lct-v0.2.1
           path: |
-            dist/cell-lct-v0.2.0.zip
-            dist/cell-lct-v0.2.0.zip.sha256
+            dist/cell-lct-v0.2.1.zip
+            dist/cell-lct-v0.2.1.zip.sha256

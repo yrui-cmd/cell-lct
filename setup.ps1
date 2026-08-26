@@ -40,5 +40,5 @@ if ($VerifyApi) { $doctorArgs.VerifyApi = $true }
 & (Join-Path $repoRoot "doctor.ps1") @doctorArgs
 if ($LASTEXITCODE -ne 0) { throw "Installation completed, but diagnostics found a blocking requirement." }
 
-Write-Output "SETUP_OK|version=0.2.0|skill=$installedSkill"
+Write-Output "SETUP_OK|version=0.2.1|skill=$installedSkill"
 Write-Output "Restart Codex and start a new task before first use."

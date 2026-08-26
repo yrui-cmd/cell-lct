@@ -10,6 +10,8 @@ Use Codex Image 2 once to remove text only. The cleaned reference must retain ar
 
 Send the complete text-cleaned reference to the bundled vector service. Reject raster wrappers and incomplete results. Add the recorded text back as live SVG `<text>` elements before caching, at the original coordinates and z-order. Do not add text after Illustrator playback and do not outline it.
 
+Before uploading any image bytes, determine the expected credit cost from the current service contract or an explicit estimate. If it exceeds 1, pause and ask the user whether to continue; a refusal means the image is never uploaded. After upload is approved, continue through processing and result download without another cost confirmation.
+
 The Master SVG and all job outputs share one allocated `shibielujingN` basename.
 
 ## 3. Normalize and cache once
