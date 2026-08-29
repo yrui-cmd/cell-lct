@@ -1,0 +1,5 @@
+interface:
+  display_name: "Cell-lct Image"
+  short_description: "用 Image 2 生成供 cell-lct 矢量化的科研参考图"
+  default_prompt: "使用 $cell-lct-image 生成一张适合后续 $cell-lct 矢量化的扁平化科研参考图。"
+  brand_color: "#D97706"
