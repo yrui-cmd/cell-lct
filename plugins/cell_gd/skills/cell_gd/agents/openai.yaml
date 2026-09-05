@@ -1,0 +1,4 @@
+interface:
+  display_name: "cell_gd"
+  short_description: "原图直接识别路径，自选 PPT 或 Illustrator 绘制"
+  default_prompt: "Use $cell_gd to send my original image directly to path recognition, then draw it in my chosen PPT or Adobe Illustrator."

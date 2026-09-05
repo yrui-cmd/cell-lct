@@ -1,154 +1,111 @@
 #requires -Version 5.1
-
 [CmdletBinding()]
 param()
 
-$ErrorActionPreference = "Stop"
-$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$pluginRoot = Join-Path $repoRoot "plugins\cell-lct"
-$skillsRoot = Join-Path $pluginRoot "skills"
-$skillRoot = Join-Path $skillsRoot "cell-lct"
-$requiredSkills = @("cell-lct")
-
-foreach ($relativePath in @(
-    "install.ps1",
-    "setup.ps1",
-    "doctor.ps1",
-    "build-release.ps1",
-    "requirements.lock",
-    "runtime-lock.json",
-    "plugins\cell-lct\.codex-plugin\plugin.json",
-    "plugins\cell-lct\skills\cell-lct\SKILL.md",
-    "plugins\cell-lct\skills\cell-lct\scripts\run_cell_lct.ps1",
-    "plugins\cell-lct\skills\cell-lct\scripts\run_from_image.ps1",
-    "plugins\cell-lct\skills\cell-lct\scripts\assert-credit-policy.ps1",
-    "plugins\cell-lct\skills\cell-lct\scripts\merge_live_text.py",
-    "plugins\cell-lct\skills\cell-lct\scripts\xiaomiao.ps1",
-    "plugins\cell-lct\skills\cell-lct\scripts\vectorize-xiaomiao.ps1"
-)) {
-    $path = Join-Path $repoRoot $relativePath
-    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Required package file is missing: $relativePath" }
+$ErrorActionPreference = 'Stop'
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$pluginRoot = Join-Path $repoRoot 'plugins\cell_gd'
+$skillRoot = Join-Path $pluginRoot 'skills\cell_gd'
+$required = @(
+    'README.md', 'README_EN.md', 'LICENSE', 'CHANGELOG.md', '.gitignore',
+    'setup.ps1', 'setup.sh', 'install.ps1', 'install.py', 'doctor.ps1', 'doctor.py',
+    'build-release.ps1', 'requirements.lock', 'runtime-lock.json',
+    'plugins\cell_gd\.codex-plugin\plugin.json',
+    'plugins\cell_gd\skills\cell_gd\SKILL.md',
+    'plugins\cell_gd\skills\cell_gd\references\platform-contract.json',
+    'plugins\cell_gd\skills\cell_gd\scripts\run_cell_ppt.ps1',
+    'plugins\cell_gd\skills\cell_gd\scripts\run_cell_ppt_ooxml.py',
+    'plugins\cell_gd\skills\cell_gd\scripts\run_from_svg.ps1',
+    'plugins\cell_gd\skills\cell_gd\scripts\run_from_svg.py',
+    'plugins\cell_gd\skills\cell_gd\scripts\run_from_image.ps1',
+    'plugins\cell_gd\skills\cell_gd\scripts\run_from_image.py',
+    'plugins\cell_gd\skills\cell_gd\scripts\set-xiaomiao-key.ps1',
+    'plugins\cell_gd\skills\cell_gd\scripts\set_xiaomiao_key.py',
+    'plugins\cell_gd\skills\cell_gd\scripts\configure_runtime.py',
+    'plugins\cell_gd\skills\cell_gd\scripts\xiaomiao.ps1',
+    'plugins\cell_gd\skills\cell_gd\scripts\xiaomiao.py'
+)
+foreach ($relative in $required) {
+    if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relative) -PathType Leaf)) { throw "Required package file is missing: $relative" }
+}
+foreach ($forbidden in @('FROZEN-MANIFEST.json', 'update-frozen-manifest.ps1')) {
+    if (Test-Path -LiteralPath (Join-Path $repoRoot $forbidden)) { throw "Obsolete freeze file remains: $forbidden" }
 }
 
-$manifest = Get-Content -LiteralPath (Join-Path $pluginRoot ".codex-plugin\plugin.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($manifest.name -ne "cell-lct" -or $manifest.version -ne "0.2.1" -or $manifest.skills -ne "./skills/") {
-    throw "Plugin manifest identity or stable version is incorrect."
-}
+$plugin = Get-Content -LiteralPath (Join-Path $pluginRoot '.codex-plugin\plugin.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($plugin.name -ne 'cell_gd' -or $plugin.version -ne '0.3.0' -or $plugin.skills -ne './skills/' -or $plugin.license -ne 'MIT') { throw 'Plugin identity is invalid.' }
+if ($plugin.interface.displayName -ne 'cell_gd' -or $plugin.author.name -ne 'yrui-cmd') { throw 'Plugin display identity is invalid.' }
+if (Test-Path -LiteralPath (Join-Path $repoRoot '.agents\plugins\marketplace.json')) { throw 'Marketplace metadata must not be included.' }
 
-if (Test-Path -LiteralPath (Join-Path $repoRoot ".agents\plugins\marketplace.json")) {
-    throw "Marketplace installation entry must not be included in this release."
-}
+$runtime = Get-Content -LiteralPath (Join-Path $repoRoot 'runtime-lock.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($runtime.codex.skillId -ne 'cell_gd' -or $runtime.platform.macBackend -ne 'editable-ooxml') { throw 'Runtime contract identity is invalid.' }
+$contract = Get-Content -LiteralPath (Join-Path $skillRoot 'references\platform-contract.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($contract.ordinaryBatchMin -ne 20 -or $contract.ordinaryBatchMax -ne 50 -or $contract.geometryCacheSchema -ne 3 -or $contract.complexPointThreshold -ne 320 -or $contract.maxBatchPoints -ne 2200 -or $contract.windowsStepDelayMs -ne 8 -or $contract.visibilityRule -ne 'remove-exact-duplicates-only') { throw 'Fixed core defaults are invalid.' }
+if ($contract.powerPointCompatibility.notYearLocked -ne $true -or $contract.powerPointCompatibility.windows -notcontains '2016' -or $contract.powerPointCompatibility.windows -notcontains 'Microsoft 365 desktop') { throw 'PowerPoint compatibility must not be year-locked.' }
+if ($contract.installation.autoDetectRuntime -ne $true -or $contract.installation.chatApiKeyAllowed -ne $true -or $contract.installation.credentialTransport -ne 'stdin-only') { throw 'Automatic installation contract is invalid.' }
+$expectedRequirements = "python-pptx==1.0.2`nfonttools==4.61.1`nshapely==2.1.2"
+$actualRequirements = (Get-Content -LiteralPath (Join-Path $repoRoot 'requirements.lock') -Raw -Encoding UTF8).Trim() -replace "`r`n", "`n"
+if ($actualRequirements -ne $expectedRequirements) { throw 'Python dependencies are not exactly locked.' }
 
-$runtimeLock = Get-Content -LiteralPath (Join-Path $repoRoot "runtime-lock.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($runtimeLock.release -ne "0.2.1" -or $runtimeLock.gitTag -ne "v0.2.1" -or $runtimeLock.pythonDependencies.fonttools -ne "4.61.1") {
-    throw "Runtime lock is inconsistent with the stable release."
+$allFiles = Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Force | Where-Object {
+    $_.FullName -notmatch '[\\/]\.git[\\/]' -and $_.FullName -notmatch '[\\/]dist[\\/]' -and $_.FullName -notmatch '[\\/]\.test-tmp[\\/]'
 }
-if ((Get-Content -LiteralPath (Join-Path $repoRoot "requirements.lock") -Raw -Encoding UTF8).Trim() -ne "fonttools==4.61.1") {
-    throw "Python dependency lock is not exact."
-}
-
-foreach ($skillName in $requiredSkills) {
-    if (-not (Test-Path -LiteralPath (Join-Path $skillsRoot "$skillName\SKILL.md") -PathType Leaf)) { throw "Bundled skill is missing: $skillName" }
-}
-
-$allFiles = Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Force | Where-Object { $_.FullName -notmatch '[\\/]\.git[\\/]' }
-$secretPattern = "img" + "_live_[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}"
+$secretPattern = 'img_live_[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}'
 foreach ($file in $allFiles) {
+    if ($file.Extension -notin @('.md','.ps1','.sh','.py','.json','.yaml','.yml','.txt','.lock','.svg')) { continue }
     $content = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
     if ($content -and [regex]::IsMatch($content, $secretPattern)) { throw "A live API key marker was found in: $($file.FullName)" }
 }
 
-$skillText = Get-Content -LiteralPath (Join-Path $skillRoot "SKILL.md") -Raw -Encoding UTF8
-$specText = Get-Content -LiteralPath (Join-Path $skillRoot "references\workflow-spec.md") -Raw -Encoding UTF8
-function Decode-Utf8Base64([string]$Value) { [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Value)) }
-foreach ($phrase in @(
-    "Image 2 may remove text only",
-    "Preserve arrows and arrow tails, connectors, frames, coordinate axes, heatmaps, legends",
-    (Decode-Utf8Base64 "5oSf6LCi5bCP57qi5Lmm77ya5pyo57q55bCP6Lev44CC"),
-    (Decode-Utf8Base64 "6K+G5Yir57uT5p6E44CC"),
-    (Decode-Utf8Base64 "5q2j5Zyo55S75Zu+44CC")
-)) {
-    if ($skillText -notlike "*$phrase*") { throw "Required workflow phrase is missing: $phrase" }
+$skillText = Get-Content -LiteralPath (Join-Path $skillRoot 'SKILL.md') -Raw -Encoding UTF8
+foreach ($phrase in @('name: cell_gd', 'platform-contract.json', 'runtime-profile.json', 'chat', 'macOS', 'standard input', 'path-return SVG')) {
+    if ($skillText -notlike "*$phrase*") { throw "Required Skill contract is missing: $phrase" }
 }
-if ($skillText -notmatch '20.50') { throw "The 20-50 batch policy is missing." }
-
-$quotaMessage = Decode-Utf8Base64 "5b2T5YmN6aKd5bqm5LiN6Laz77yM6K+35Zyo5bCP57qi5Lmm5pCc57Si4oCc5pyo57q55bCP6Lev4oCd77yI57qmMjAw5Liq57KJ5Lid55qE5bCP5Y2a5Li777yJ6I635Y+W5YWF5YC844CC5YWE5byf5Lus77yM5bCP57qi5Lmm5LiN6KaB6LCI6K665qKv5a2Q562J5pWP5oSf6K+d6aKY77yb5pyJ6Zeu6aKY6K+356eB5L+h5oqW6Z+z4oCc5pyo57q54oCd77yI57qmOTAw5Liq57KJ5Lid55qE5bCP5Y2a5Li777yJ44CC"
-if ($specText -notlike "*$quotaMessage*") { throw "The fixed quota message is missing." }
-
-foreach ($forbiddenPhrase in @(
-    (Decode-Utf8Base64 "5oSf6LCi5oqW6Z+z77ya5pyo57q55o+Q5L6b55qE5biu5Yqp44CC"),
-    (Decode-Utf8Base64 "SW1hZ2UgMiDlj6rliKDpmaTmloflrZfjgIHnrq3lpLTjgIHnrq3lpLTlsL7lt7TjgIHng63lm77lkozmuJDlj5jlm77kvos="),
-    (Decode-Utf8Base64 "5q+P5Liq5a6M5pW057Sg5p2Q5Y2V54us6LCD55So"),
-    (Decode-Utf8Base64 "5Zue5aGr5YWo6YOo6KeE5YiZ5YWD57Sg")
-)) {
-    if ($skillText -like "*$forbiddenPhrase*" -or $specText -like "*$forbiddenPhrase*") { throw "Conflicting legacy rule remains: $forbiddenPhrase" }
+foreach ($forbidden in @('Read-Host', 'FROZEN-MANIFEST', 'fixed Git tag')) {
+    if ($skillText -like "*$forbidden*") { throw "Conflicting Skill rule remains: $forbidden" }
 }
 
-$pythonCommand = if (Get-Command py -ErrorAction SilentlyContinue) { @("py", "-3") } elseif (Get-Command python -ErrorAction SilentlyContinue) { @("python") } else { throw "Python 3 is required." }
-
-$creditPolicy = Join-Path $skillRoot "scripts\assert-credit-policy.ps1"
-& $creditPolicy -EstimatedCredits 1 -ImageId "test-low" | Out-Null
-$highCostBlocked = $false
-try { & $creditPolicy -EstimatedCredits 2 -ImageId "test-high" | Out-Null }
-catch { if ($_.Exception.Message -like "*COST_CONFIRMATION_REQUIRED|estimated_credits=2*") { $highCostBlocked = $true } else { throw } }
-if (-not $highCostBlocked) { throw "High-cost requests are not blocked before approval." }
-& $creditPolicy -EstimatedCredits 2 -ImageId "test-high" -Approved | Out-Null
-
-$vectorizerText = Get-Content -LiteralPath (Join-Path $skillRoot "scripts\vectorize-xiaomiao.ps1") -Raw -Encoding UTF8
-$preflightIndex = $vectorizerText.IndexOf('& $creditPolicy -EstimatedCredits $EstimatedCredits')
-$verifyIndex = $vectorizerText.IndexOf('$verification = & $adapter verify')
-$uploadIndex = $vectorizerText.IndexOf('$submission = & $adapter upload')
-if ($preflightIndex -lt 0 -or $verifyIndex -lt 0 -or $uploadIndex -lt 0 -or $preflightIndex -gt $verifyIndex -or $preflightIndex -gt $uploadIndex) {
-    throw "The credit gate must execute before API verification and image upload."
-}
-function Invoke-Python([string[]]$Arguments) {
-    if ($pythonCommand.Count -eq 2) { & $pythonCommand[0] $pythonCommand[1] -X utf8 @Arguments }
-    else { & $pythonCommand[0] -X utf8 @Arguments }
-    if ($LASTEXITCODE -ne 0) { throw "Python validation failed." }
-}
-
-$tempBase = Join-Path $repoRoot ".test-tmp"
-$tempRoot = Join-Path $tempBase ([Guid]::NewGuid().ToString("N"))
+$tempBase = Join-Path $repoRoot '.test-tmp'
+$tempRoot = Join-Path $tempBase ([Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
-
 try {
-    $installRoot = Join-Path $tempRoot "skills"
-    & (Join-Path $repoRoot "install.ps1") -Destination $installRoot
-    if (-not (Test-Path -LiteralPath (Join-Path $installRoot "cell-lct\SKILL.md") -PathType Leaf)) { throw "Install smoke test failed." }
+    $installRoot = Join-Path $tempRoot 'skills'
+    & (Join-Path $repoRoot 'install.ps1') -Destination $installRoot
+    $installed = Join-Path $installRoot 'cell_gd\SKILL.md'
+    if (-not (Test-Path -LiteralPath $installed -PathType Leaf)) { throw 'Install smoke test failed.' }
+    if ((Get-Item -LiteralPath (Split-Path -Parent $installed)).LinkType) { throw 'Public installer created a link instead of a copy.' }
+    $profilePath = Join-Path $installRoot 'cell_gd\runtime-profile.json'
+    if (-not (Test-Path -LiteralPath $profilePath -PathType Leaf)) { throw 'Automatic runtime profile was not created.' }
+    $profile = Get-Content -LiteralPath $profilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($profile.core.stepDelayMs -ne 8 -or $profile.core.filter -ne 'remove-exact-duplicates-only' -or [string]::IsNullOrWhiteSpace($profile.backend)) { throw 'Automatic runtime profile is invalid.' }
 
-    $fixture = Join-Path $repoRoot "tests\fixtures\simple.svg"
-    Invoke-Python @((Join-Path $skillRoot "scripts\validate_vector_svg.py"), "--svg", $fixture)
-
-    $cleanFixture = Join-Path $repoRoot "tests\fixtures\clean-reference.svg"
-    $textManifest = Join-Path $repoRoot "tests\fixtures\text-manifest.json"
-    $mergedFixture = Join-Path $tempRoot "master-with-live-text.svg"
-    Invoke-Python @((Join-Path $skillRoot "scripts\merge_live_text.py"), "--input-svg", $cleanFixture, "--text-manifest", $textManifest, "--output-svg", $mergedFixture)
-    Invoke-Python @((Join-Path $skillRoot "scripts\validate_vector_svg.py"), "--svg", $mergedFixture)
-    $mergedXml = Get-Content -LiteralPath $mergedFixture -Raw -Encoding UTF8
-    foreach ($preservedId in @('frame', 'subject', 'arrow', 'legend')) {
-        if ($mergedXml -notmatch ('id=["'']' + [regex]::Escape($preservedId) + '["'']')) { throw "Non-text structure was lost: $preservedId" }
-    }
-    if ($mergedXml -notmatch '<text\b' -or $mergedXml -match '<image\b') { throw "Merged Master SVG text/raster contract failed." }
-
-    $cacheRoot = Join-Path $tempRoot "cache"
-    Invoke-Python @((Join-Path $skillRoot "scripts\prepare_geometry_cache.py"), "--input", $mergedFixture, "--output-dir", $cacheRoot, "--job-id", "package-smoke")
-    foreach ($cacheFile in @("geometry-cache.json", "playback.json")) {
-        if (-not (Test-Path -LiteralPath (Join-Path $cacheRoot $cacheFile) -PathType Leaf)) { throw "Geometry cache did not create $cacheFile." }
-    }
-    $geometryCache = Get-Content -LiteralPath (Join-Path $cacheRoot "geometry-cache.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-    $editableText = $geometryCache.atoms | Where-Object { $_.kind -eq "text" -and $_.text.contents -eq "Cell-lct" }
-    if (-not $editableText) { throw "Geometry cache did not preserve the live text atom." }
-    if ($geometryCache.atoms | Where-Object { $_.kind -eq "image" }) { throw "Raster atom was found in the geometry cache." }
-
-    $dryRunOutput = & (Join-Path $skillRoot "scripts\run_cell_lct.ps1") -InputSvg $mergedFixture -WorkDir (Join-Path $tempRoot "dry-cache") -OutputAi (Join-Path $tempRoot "dry.ai") -OutputPng (Join-Path $tempRoot "dry.png") -MinBatchSize 20 -MaxBatchSize 50 -DryRun | Out-String
-    if ($dryRunOutput -notmatch 'DRY_RUN\|' -or $dryRunOutput -notmatch 'illustrator_untouched=true') { throw "Illustrator dry-run contract failed." }
+    $secretPath = Join-Path $tempRoot 'fake-key.dpapi'
+    $setter = Join-Path $skillRoot 'scripts\set-xiaomiao-key.ps1'
+    $fakeKey = ('img' + '_live_TESTKEY123456.TESTSECRET123456')
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = (Get-Process -Id $PID).Path
+    $start.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$setter`" -FromStdin -SecretPath `"$secretPath`""
+    $start.UseShellExecute = $false
+    $start.RedirectStandardInput = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $process = [Diagnostics.Process]::Start($start)
+    $process.StandardInput.WriteLine($fakeKey)
+    $process.StandardInput.Close()
+    $output = $process.StandardOutput.ReadToEnd()
+    $errorOutput = $process.StandardError.ReadToEnd()
+    $process.WaitForExit()
+    if ($process.ExitCode -ne 0) { throw "Stdin credential setup failed: $errorOutput" }
+    if ($output -notmatch 'KEY_CONFIG_OK' -or $output -match [regex]::Escape($fakeKey)) { throw 'Credential output contract failed.' }
+    $cipher = Get-Content -LiteralPath $secretPath -Raw -Encoding UTF8
+    if ($cipher -match [regex]::Escape($fakeKey)) { throw 'Credential plaintext was written to storage.' }
 }
 finally {
     if (Test-Path -LiteralPath $tempBase) {
         $checked = [IO.Path]::GetFullPath($tempBase)
-        if (-not $checked.StartsWith($repoRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw "Refusing to remove a directory outside the project." }
+        if (-not $checked.StartsWith($repoRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Refusing to remove a directory outside the project.' }
         Remove-Item -LiteralPath $checked -Recurse -Force
     }
 }
 
-Write-Output "PACKAGE_OK|skill=cell-lct|version=0.2.1|text=live|cache=validated|secret_scan=clean|marketplace=absent"
+Write-Output 'PACKAGE_OK|skill=cell_gd|version=0.3.0|platforms=windows,macos|freeze=removed|secret_scan=clean'

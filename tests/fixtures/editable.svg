@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+  <rect id="background" x="0" y="0" width="240" height="120" fill="#ffffff"/>
+  <path id="curve" d="M20 85 C55 20 105 20 140 85" fill="none" stroke="#2768b2" stroke-width="5"/>
+  <circle id="node" cx="180" cy="58" r="30" fill="#8bcf88" stroke="#245b32" stroke-width="3"/>
+  <text id="label" x="120" y="108" font-family="Arial" font-size="18" font-weight="700" fill="#1f2937">cell_gd</text>
+</svg>

@@ -1,30 +1,45 @@
 {
-  "release": "0.2.1",
-  "gitTag": "v0.2.1",
   "platform": {
-    "os": "Windows 10 or 11 x64",
-    "powershell": ">=5.1",
+    "os": "Windows 10/11 x64 or macOS 13+",
+    "powershell": ">=5.1 on Windows",
     "python": ">=3.11,<3.15",
-    "illustrator": "2026 (30.x)",
-    "illustratorProgId": "Illustrator.Application.30"
+    "powerPoint": "Windows: PowerPoint 2016/2019/2021/LTSC 2021/LTSC 2024/Microsoft 365 desktop via 16.x COM; macOS: PowerPoint 2019/2021/2024/Microsoft 365 desktop via saved-PPTX OOXML",
+    "powerPointProgId": "PowerPoint.Application",
+    "macBackend": "editable-ooxml",
+    "wps": "experimental",
+    "illustrator": "Windows, Illustrator 2026 / 30.x, active document"
   },
   "pythonDependencies": {
-    "fonttools": "4.61.1"
+    "python-pptx": "1.0.2",
+    "fonttools": "4.61.1",
+    "shapely": "2.1.2"
   },
   "codex": {
     "requiresDesktopApp": true,
-    "requiresBuiltInImage2": true,
-    "skillId": "cell-lct"
+    "requiresBuiltInImage2": false,
+    "skillId": "cell_gd"
   },
   "runtimeContracts": {
-    "geometryCacheSchema": "1.0",
-    "textManifestSchema": "1.0",
+    "geometryCacheSchema": 3,
     "ordinaryBatchMin": 20,
     "ordinaryBatchMax": 50,
-    "illustratorConnections": 1
+    "presentationConnections": 1,
+    "defaultStepDelayMs": 8,
+    "drawingOrder": "source-paint-order-back-to-front",
+    "preexistingObjects": "preserve"
   },
   "credentials": {
-    "storage": "Windows DPAPI",
+    "input": "stdin-from-codex",
+    "chatInputAllowed": true,
+    "echoOrRepeat": false,
+    "storage": "Windows DPAPI or macOS Keychain service cell-ppt-xiaomiao",
     "includedInPackage": false
+  },
+  "installation": {
+    "runtimeDetection": "automatic",
+    "dependencyInstallation": "automatic",
+    "backendSelection": "automatic",
+    "profile": "runtime-profile.json",
+    "applicationSelection": "user: ppt or ai"
   }
 }

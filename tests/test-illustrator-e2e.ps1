@@ -13,7 +13,7 @@ if (-not $ConfirmDisposableOpenDocument) {
 }
 
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$skillRoot = Join-Path $repoRoot "plugins\cell-lct\skills\cell-lct"
+$skillRoot = Join-Path $repoRoot "plugins\cell_gd\skills\cell_gd"
 $inputSvg = Join-Path $repoRoot "tests\fixtures\simple.svg"
 $outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null

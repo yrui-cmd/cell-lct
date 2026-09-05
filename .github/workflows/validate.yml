@@ -1,4 +1,4 @@
-name: Validate plugin package
+name: Validate cell_gd
 
 on:
   push:
@@ -6,35 +6,51 @@ on:
   pull_request:
 
 jobs:
-  validate-windows-package:
+  shared-core:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - name: Install fixed dependencies
+        run: python -m pip install --requirement requirements.lock
+      - name: Compile Python runtime
+        run: python -m compileall -q install.py doctor.py plugins/cell_gd/skills/cell_gd/scripts tests/test_cross_platform.py
+      - name: Validate macOS setup entrypoint
+        if: runner.os == 'macOS'
+        run: bash -n ./setup.sh
+      - name: Test unchanged original-image forwarding and AI cache
+        run: python tests/test_original_image.py
+      - name: Test balance reporting without API calls
+        run: python tests/test_balance.py
+      - name: Test shared core and editable OOXML output
+        run: python tests/test_cross_platform.py
+
+  windows-live-backend:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-          cache: "pip"
-          cache-dependency-path: "requirements.lock"
-      - name: Install locked dependencies
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - name: Install fixed dependencies
         shell: powershell
         run: py -3 -m pip install --requirement .\requirements.lock
-      - name: Validate installable package
+      - name: Validate package and Windows credential flow
         shell: powershell
         run: .\tests\test-package.ps1
-      - name: Run Windows end-to-end test
+      - name: Run deterministic Windows workflow test
         shell: powershell
         run: .\tests\test-windows-e2e.ps1
-      - name: Build and verify release archive
+      - name: Test both original-image routes without API calls
         shell: powershell
-        run: |
-          .\build-release.ps1 -SkipTests
-          $zip = '.\dist\cell-lct-v0.2.1.zip'
-          $expected = ((Get-Content "$zip.sha256") -split '\s+')[0]
-          $actual = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($actual -ne $expected) { throw 'Release SHA256 mismatch.' }
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cell-lct-v0.2.1
-          path: |
-            dist/cell-lct-v0.2.1.zip
-            dist/cell-lct-v0.2.1.zip.sha256
+        run: .\tests\test-image-routing.ps1

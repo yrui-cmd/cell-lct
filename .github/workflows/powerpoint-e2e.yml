@@ -1,0 +1,16 @@
+name: PowerPoint live end-to-end
+
+on:
+  workflow_dispatch:
+
+jobs:
+  powerpoint-live:
+    runs-on: [self-hosted, Windows, powerpoint]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install locked dependencies
+        shell: powershell
+        run: py -3 -m pip install --requirement .\requirements.lock
+      - name: Run disposable PowerPoint test
+        shell: powershell
+        run: .\tests\test-powerpoint-e2e.ps1 -ConfirmDisposablePresentation

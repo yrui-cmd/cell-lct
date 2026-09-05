@@ -3,48 +3,47 @@
 [CmdletBinding()]
 param()
 
-$ErrorActionPreference = "Stop"
-$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$testBase = Join-Path $repoRoot ".test-tmp"
-$testRoot = Join-Path $testBase ("windows-e2e-" + [Guid]::NewGuid().ToString("N"))
-$skillDestination = Join-Path $testRoot "skills"
+$ErrorActionPreference = 'Stop'
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$skillRoot = Join-Path $repoRoot 'plugins\cell_gd\skills\cell_gd'
+$fixture = Join-Path $PSScriptRoot 'fixtures\visibility.svg'
+$tempBase = Join-Path $repoRoot '.test-tmp'
+$tempRoot = Join-Path $tempBase ([Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 
 try {
-    New-Item -ItemType Directory -Force -Path $testRoot | Out-Null
+    $master = Join-Path $tempRoot 'master.svg'
+    Copy-Item -LiteralPath $fixture -Destination $master
+    py -3 -X utf8 (Join-Path $skillRoot 'scripts\validate_vector_svg.py') --svg $master | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Master SVG validation failed.' }
 
-    $setupOutput = & (Join-Path $repoRoot "setup.ps1") -Destination $skillDestination -SkipDependencies -SkipApiKey -SkipIllustratorCheck | Out-String
-    if ($setupOutput -notmatch "SETUP_OK\|version=0.2.1") { throw "One-click setup did not complete." }
+    $cacheRoot = Join-Path $tempRoot 'cache'
+    py -3 -X utf8 (Join-Path $skillRoot 'scripts\prepare_geometry_cache.py') --input $master --output-dir $cacheRoot --job-id windows-e2e | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Geometry cache creation failed.' }
+    py -3 -X utf8 (Join-Path $skillRoot 'scripts\cull_hidden_geometry.py') --cache (Join-Path $cacheRoot 'geometry-cache.json') --state (Join-Path $cacheRoot 'drawing-state.json') | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Visibility culling failed.' }
 
-    $installedSkill = Join-Path $skillDestination "cell-lct"
-    $doctorOutput = & (Join-Path $repoRoot "doctor.ps1") -SkillRoot $installedSkill -SkipApi -SkipIllustrator | Out-String
-    if ($doctorOutput -notmatch "DOCTOR_OK\|version=0.2.1") { throw "Offline diagnostics did not pass." }
+    $cache = Get-Content -LiteralPath (Join-Path $cacheRoot 'geometry-cache.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ([int]$cache.source_total_drawing_paths -le [int]$cache.total_atoms) { throw 'Fixture did not remove its exact duplicate path.' }
+    if ([int]$cache.culled_atom_count -ne 1) { throw 'Only the exact duplicate path should be removed.' }
+    if (@($cache.culled_atoms | Where-Object { $_.reason -ne 'exact_duplicate' }).Count -ne 0) { throw 'A non-duplicate path was removed.' }
+    if (@($cache.atoms | Where-Object { $_.sourceId -eq 'green-hidden' }).Count -ne 1) { throw 'A covered non-duplicate path was not preserved.' }
+    if (@($cache.atoms | Where-Object { $_.kind -ne 'text' -and $_.subpaths.Count -ne 1 }).Count -ne 0) { throw 'Drawing units were not normalized to one subpath.' }
+    if (@($cache.batches | Where-Object { $_.atomic_count -gt 50 }).Count -ne 0) { throw 'Batch size exceeded 50.' }
 
-    $fixture = Join-Path $repoRoot "tests\fixtures\clean-reference.svg"
-    $manifest = Join-Path $repoRoot "tests\fixtures\text-manifest.json"
-    $masterSvg = Join-Path $testRoot "master.svg"
-    $python = if (Get-Command py -ErrorAction SilentlyContinue) { @("py", "-3") } else { @("python") }
-    if ($python.Count -eq 2) {
-        & $python[0] $python[1] -X utf8 (Join-Path $installedSkill "scripts\merge_live_text.py") --input-svg $fixture --text-manifest $manifest --output-svg $masterSvg
-    } else {
-        & $python[0] -X utf8 (Join-Path $installedSkill "scripts\merge_live_text.py") --input-svg $fixture --text-manifest $manifest --output-svg $masterSvg
+    $runtimeText = Get-Content -LiteralPath (Join-Path $skillRoot 'scripts\run_cell_ppt.ps1') -Raw -Encoding UTF8
+    foreach ($contract in @('$application = $hostInfo.Application', '$shape.ZOrder(0)', 'Show-ObjectStep', '$UseActivePresentation')) {
+        if ($runtimeText -notlike "*$contract*") { throw "PowerPoint runtime contract is missing: $contract" }
     }
-    if ($LASTEXITCODE -ne 0) { throw "Live-text Master SVG construction failed." }
-
-    $dryOutput = & (Join-Path $installedSkill "scripts\run_cell_lct.ps1") -InputSvg $masterSvg -WorkDir (Join-Path $testRoot "cache") -OutputAi (Join-Path $testRoot "result.ai") -OutputPng (Join-Path $testRoot "result.png") -MinBatchSize 20 -MaxBatchSize 50 -DryRun | Out-String
-    if ($dryOutput -notmatch "illustrator_untouched=true") { throw "Dry-run touched or attempted to manage Illustrator." }
-
-    Write-Output "WINDOWS_E2E_OK|version=0.2.1|setup=pass|doctor=pass|text=live|illustrator=dry-run"
+    $fromSvgText = Get-Content -LiteralPath (Join-Path $skillRoot 'scripts\run_from_svg.ps1') -Raw -Encoding UTF8
+    if ($fromSvgText -notmatch 'StepDelayMs = 8' -or $fromSvgText -notmatch 'cull_hidden_geometry.py') { throw 'SVG wrapper does not enforce fixed core drawing defaults.' }
 }
 finally {
-    if (Test-Path -LiteralPath $testRoot) {
-        $checkedRoot = [IO.Path]::GetFullPath($testRoot)
-        $checkedBase = [IO.Path]::GetFullPath($testBase).TrimEnd('\') + '\'
-        if (-not $checkedRoot.StartsWith($checkedBase, [StringComparison]::OrdinalIgnoreCase)) {
-            throw "Refusing to remove a directory outside the test root."
-        }
-        Remove-Item -LiteralPath $checkedRoot -Recurse -Force
-        if ((Test-Path -LiteralPath $testBase) -and -not (Get-ChildItem -LiteralPath $testBase -Force | Select-Object -First 1)) {
-            Remove-Item -LiteralPath $testBase -Force
-        }
+    if (Test-Path -LiteralPath $tempBase) {
+        $checked = [IO.Path]::GetFullPath($tempBase)
+        if (-not $checked.StartsWith($repoRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Refusing to remove a directory outside the project.' }
+        Remove-Item -LiteralPath $checked -Recurse -Force
     }
 }
+
+Write-Output 'WINDOWS_E2E_OK|cache=single-parse|duplicates=removed-only|text=editable|batch=20-50|delay_ms=8'

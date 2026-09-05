@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="100" viewBox="0 0 120 100">
+  <path id="red-bottom" d="M0 0 L100 0 L100 100 L0 100 Z" fill="#ff0000"/>
+  <path id="green-hidden" d="M10 10 L20 10 L20 20 L10 20 Z" fill="#00ff00"/>
+  <path id="red-duplicate" d="M0 0 L100 0 L100 100 L0 100 Z" fill="#ff0000"/>
+  <path id="multi-subpath" d="M5 5 L15 5 L15 15 L5 15 Z M105 5 L115 5 L115 15 L105 15 Z" fill="#663399"/>
+  <path id="blue-left-cover" d="M0 0 L50 0 L50 100 L0 100 Z" fill="#0000ff"/>
+</svg>
