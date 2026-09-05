@@ -1,42 +1,105 @@
-# cell_gd
+# Cell-lct
 
-原图直接进入路径识别，使用者选择 **PPT 或 Adobe Illustrator**，随后沿用原 cell-ppt / cell-lct 的绘图与后处理。
+Cell-lct `v0.2.1` 是面向 Windows、Codex Desktop 与 Adobe Illustrator 2026 的稳定版科研矢量绘图插件。它将参考图重建为可编辑路径和真实 SVG 文本，并续画到用户已经打开的 Illustrator 文档中。
 
-## 流程
+## 稳定版保证
 
-1. 提供原始 PNG、JPEG 或 WebP。
-2. 选择 PPT 或 Adobe Illustrator。
-3. 原图完整上传路径识别；不提取文字、不生成文字清单、不用 Image 2 去字、不回填文字。
-4. 识别得到的 SVG 进入所选绘图分支。图片里的字随图识别，可能成为可编辑路径，不承诺文本框。
-5. PPT 保存可编辑 PPTX；Illustrator 保存 AI，并在完成后导出 PNG。
+- 固定源码版本：Git Tag `v0.2.1`。
+- 固定 Python 依赖：`requirements.lock`。
+- 固定运行契约：`runtime-lock.json`。
+- 一键安装与诊断：`setup.ps1`、`doctor.ps1`。
+- Windows 自动端到端测试，另提供 Illustrator 2026 人工触发真机测试。
+- Release ZIP 配套独立 SHA256 文件。
+- 不提供 Marketplace 安装入口；从固定 Tag 或 Release ZIP 安装。
+- API Key 不随项目分发，只通过当前 Windows 账户的 DPAPI 加密保存。
+- 单张图片预计消耗超过 1 额度时，必须在上传 API 前取得用户确认；拒绝时不上传。确认后处理与下载不再重复询问。
 
-PPT 保留原逐路径去重、绘制顺序、8 ms 间隔、已有对象保护及 macOS OOXML 后端。Illustrator 保留原缓存、20–50 对象批次、单连接续画、断点恢复、定时保存与最终导出。
+## 环境要求
 
-## 安装
+- Windows 10/11 x64
+- Codex Desktop，且当前任务具备内置 Image 2 图片编辑能力
+- Adobe Illustrator 2026（30.x）
+- PowerShell 5.1 或更高版本
+- Python 3.11–3.14
 
-Windows：运行 `setup.ps1`；macOS：运行 `bash setup.sh`。安装后的 skill 名和目录均为 `cell_gd`。两个原仓库提供同一个完整 skill，任选一个安装即可；不要同时安装同名副本。旧版不会被自动删除。
+## 从固定 Tag 一键安装
 
-Windows 支持 PPT 和 Illustrator；Illustrator 沿用已有 Windows / Illustrator 2026 运行要求，需先打开目标文档。macOS 沿用 PPT 的可编辑 OOXML 后端。
-
-API 密钥配置和额度规则沿用原适配器。原有安全凭据命名空间保持兼容。
-
-## 调用
-
-告诉 Codex：`用 cell_gd 处理这张原图，用 PPT 绘制。` 或 `用 cell_gd 处理这张原图，用 Adobe Illustrator 绘制。`
-
-Windows 脚本入口：
 ```powershell
-.\plugins\cell_gd\skills\cell_gd\scripts\run_cell_gd.ps1 -InputImage .\original.png -OutputRoot .\output -Application ppt
-```
-把 `ppt` 改为 `ai` 选择 Illustrator。需要自定义放置、批次或续画时，使用各分支原运行脚本。已认可的 SVG 可直接进入后处理。
-
-macOS PPT：
-```bash
-python plugins/cell_gd/skills/cell_gd/scripts/run_from_image.py --input-image original.png --output-root output
+git clone --branch v0.2.1 --depth 1 https://github.com/yrui-cmd/cell-lct.git
+Set-Location .\cell-lct
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-源码仓库：[yrui-cmd/cell-lct](https://github.com/yrui-cmd/cell-lct)。
+首次安装会安装锁定依赖、复制 Skill、在终端中安全提示录入 API Key，并运行诊断。API Key 不应写进命令、仓库、截图或聊天记录。
 
-## 余额显示
+如果已经存在同名 Skill，并确认要替换：
 
-每次图片识别完成后自动显示服务端返回的剩余额度，例如 `剩余额度：20`；余额为零显示 `剩余额度：0`。接口未提供有效余额时显示 `剩余额度：暂不可用`。Windows 的 PPT、Illustrator 和 macOS 图片入口均显示该信息，不额外发起计费请求。该数值是本次识别完成时的额度快照。
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup.ps1 -Force
+```
+
+安装后重启 Codex，并新建任务。先由用户打开 Illustrator 2026 和目标文档，然后发送：
+
+```text
+使用 $cell-lct，根据我上传的内容或图片在当前 Illustrator 画板中作图，保留全部已有内容。
+```
+
+## 从 Release ZIP 安装
+
+下载同一版本的两个文件：
+
+- `cell-lct-v0.2.1.zip`
+- `cell-lct-v0.2.1.zip.sha256`
+
+验证后解压并运行 `setup.ps1`：
+
+```powershell
+$zip = '.\cell-lct-v0.2.1.zip'
+$expected = ((Get-Content "$zip.sha256") -split '\s+')[0]
+$actual = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($actual -ne $expected) { throw 'SHA256 校验失败，停止安装。' }
+Expand-Archive $zip -DestinationPath .\cell-lct-v0.2.1
+Set-Location .\cell-lct-v0.2.1\cell-lct-v0.2.1
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+## 诊断
+
+```powershell
+.\doctor.ps1
+.\doctor.ps1 -VerifyApi -RequireIllustratorOpen
+.\doctor.ps1 -Json
+```
+
+诊断只检查 Illustrator 注册和进程状态，不会启动、重启、聚焦、最大化或关闭 Illustrator。
+
+## 工作方式
+
+- 先记录参考图文字的内容、位置、尺寸、字体、字重、颜色、旋转、对齐和层级。
+- Image 2 只清除文字，保留箭头、框、坐标轴、热图、图例、科研主体和原布局。
+- 完整清理图进入矢量识别；返回后先在 Master SVG 中合并真实可编辑 `<text>`。
+- SVG 只解析一次并建立几何缓存，全程复用一个 Illustrator 连接。
+- 普通批次为 20–50 条路径，复杂路径可单独处理。
+- 不删除、不隐藏、不替换已有画板内容；PNG 只在结束时导出。
+
+## 测试与发行
+
+```powershell
+.\tests\test-package.ps1
+.\tests\test-windows-e2e.ps1
+.\build-release.ps1
+```
+
+Illustrator 真机测试会向当前打开的文档写入测试图，只能在一次性测试文档中显式运行：
+
+```powershell
+.\tests\test-illustrator-e2e.ps1 -ConfirmDisposableOpenDocument
+```
+
+生成的 ZIP 与 SHA256 位于 `dist`。CI 使用 Windows runner 执行离线绘制链路测试；Illustrator 真机链路仅在带 Illustrator 2026 的自托管 Windows runner 上人工触发。
+
+## 可复现性边界
+
+仓库可以固定 Skill、脚本、依赖、测试和发行文件，但无法把 Codex 内置 Image 2 或 Adobe Illustrator 本体打包进去。另一台电脑要获得一致流程，必须满足 `runtime-lock.json` 中的环境契约，并自行配置 DPAPI API Key。
+
+完整插件源码位于 `plugins/cell-lct`，安装器只把其中的 `cell-lct` Skill 部署到用户的 Codex Skills 目录。原版 Cell-lct 与 Cell-lct 可以并存。

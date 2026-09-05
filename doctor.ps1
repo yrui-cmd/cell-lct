@@ -2,63 +2,138 @@
 
 [CmdletBinding()]
 param(
+    [switch]$SkipApi,
     [switch]$VerifyApi,
-    [switch]$RequirePowerPointOpen,
-    [switch]$Json
+    [switch]$SkipIllustrator,
+    [switch]$RequireIllustratorOpen,
+    [switch]$Json,
+    [string]$SkillRoot = "$env:USERPROFILE\.codex\skills\cell-lct",
+    [string]$SecretPath = "$env:USERPROFILE\.codex\secrets\xiaomiao-api-key.dpapi"
 )
 
-$ErrorActionPreference = 'Stop'
-$projectRoot = [IO.Path]::GetFullPath($PSScriptRoot)
-$skillRoot = Join-Path $projectRoot 'plugins\cell_gd\skills\cell_gd'
-$required = @(
-    'SKILL.md',
-    'scripts\run_cell_ppt.ps1',
-    'scripts\run_from_svg.ps1',
-    'scripts\run_from_image.ps1',
-    'scripts\prepare_geometry_cache.py',
-    'scripts\cull_hidden_geometry.py',
-    'scripts\run_cell_gd.ps1',
-    'scripts\run_cell_lct.ps1',
-    'scripts\prepare_illustrator_cache.py',
-    'scripts\vectorize-xiaomiao.ps1',
-    'scripts\set-xiaomiao-key.ps1'
+$ErrorActionPreference = "Stop"
+$repoRoot = [IO.Path]::GetFullPath($PSScriptRoot)
+$lockPath = Join-Path $repoRoot "runtime-lock.json"
+$results = New-Object System.Collections.Generic.List[object]
+$fatal = $false
+
+function Add-Check([string]$Name, [string]$Status, [string]$Message, [bool]$Required) {
+    $script:results.Add([pscustomobject]@{
+        name = $Name
+        status = $Status
+        required = $Required
+        message = $Message
+    })
+    if ($Required -and $Status -eq "FAIL") { $script:fatal = $true }
+}
+
+function Get-PythonCommand {
+    if (Get-Command py -ErrorAction SilentlyContinue) { return @("py", "-3") }
+    if (Get-Command python -ErrorAction SilentlyContinue) { return @("python") }
+    return @()
+}
+
+if (-not (Test-Path -LiteralPath $lockPath -PathType Leaf)) {
+    throw "Missing runtime lock: $lockPath"
+}
+$lock = Get-Content -LiteralPath $lockPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+if ($env:OS -eq "Windows_NT") { Add-Check "windows" "PASS" "Windows detected." $true }
+else { Add-Check "windows" "FAIL" "Cell-lct stable supports Windows only." $true }
+
+if ($PSVersionTable.PSVersion -ge [version]"5.1") { Add-Check "powershell" "PASS" $PSVersionTable.PSVersion.ToString() $true }
+else { Add-Check "powershell" "FAIL" "PowerShell 5.1 or newer is required." $true }
+
+$python = Get-PythonCommand
+if ($python.Count -eq 0) {
+    Add-Check "python" "FAIL" "Python 3.11-3.14 is required." $true
+} else {
+    $pythonExe = $python[0]
+    $pythonPrefix = @()
+    if ($python.Count -gt 1) { $pythonPrefix = $python[1..($python.Count - 1)] }
+    $versionText = (& $pythonExe @pythonPrefix -c "import sys; print('.'.join(map(str,sys.version_info[:3])))" 2>&1 | Out-String).Trim()
+    $pythonVersion = $null
+    if ([version]::TryParse($versionText, [ref]$pythonVersion) -and $pythonVersion -ge [version]"3.11" -and $pythonVersion -lt [version]"3.15") {
+        Add-Check "python" "PASS" $versionText $true
+    } else {
+        Add-Check "python" "FAIL" "Detected '$versionText'; supported range is 3.11-3.14." $true
+    }
+
+    $fontToolsVersion = (& $pythonExe @pythonPrefix -c "import fontTools; print(fontTools.__version__)" 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -eq 0 -and $fontToolsVersion -eq [string]$lock.pythonDependencies.fonttools) {
+        Add-Check "fonttools" "PASS" $fontToolsVersion $true
+    } else {
+        Add-Check "fonttools" "FAIL" "Expected $($lock.pythonDependencies.fonttools), detected '$fontToolsVersion'. Run setup.ps1." $true
+    }
+}
+
+$installedSkill = Join-Path $SkillRoot "SKILL.md"
+if (Test-Path -LiteralPath $installedSkill -PathType Leaf) {
+    Add-Check "skill" "PASS" $installedSkill $true
+} else {
+    Add-Check "skill" "FAIL" "Installed Skill not found at $installedSkill. Run setup.ps1." $true
+}
+
+$image2Candidates = @(
+    (Join-Path $env:USERPROFILE ".codex\skills\.system\imagegen\SKILL.md"),
+    (Join-Path $env:USERPROFILE ".codex\plugins\cache\openai-bundled")
 )
-foreach ($relative in $required) {
-    if (-not (Test-Path -LiteralPath (Join-Path $skillRoot $relative) -PathType Leaf)) { throw "Missing: $relative" }
+if ($image2Candidates | Where-Object { Test-Path -LiteralPath $_ }) {
+    Add-Check "image2" "PASS" "A bundled image-generation capability was detected; final availability is confirmed inside Codex." $false
+} else {
+    Add-Check "image2" "WARN" "Image 2 cannot be proven from PowerShell. Confirm that image editing is available in Codex Desktop." $false
 }
 
-$pythonCommand = Get-Command py -ErrorAction SilentlyContinue
-$pythonPrefix = @('-3', '-X', 'utf8')
-if (-not $pythonCommand) {
-    $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
-    $pythonPrefix = @('-X', 'utf8')
-}
-if (-not $pythonCommand) { throw 'Python 3.11-3.14 was not found.' }
-& $pythonCommand.Source @pythonPrefix -c "import sys, pptx, fontTools, shapely; assert (3,11) <= sys.version_info[:2] < (3,15); assert pptx.__version__ == '1.0.2'; assert fontTools.__version__ == '4.61.1'; assert shapely.__version__ == '2.1.2'" | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Locked Python dependencies are unavailable or mismatched.' }
-
-$powerPointRegistered = [type]::GetTypeFromProgID('PowerPoint.Application') -ne $null
-$wpsRegistered = ([type]::GetTypeFromProgID('KWPP.Application') -ne $null) -or ([type]::GetTypeFromProgID('WPP.Application') -ne $null)
-$powerPointOpen = @(Get-Process -Name POWERPNT -ErrorAction SilentlyContinue).Count -gt 0
-if ($RequirePowerPointOpen -and (-not $powerPointRegistered -or -not $powerPointOpen)) { throw 'Microsoft PowerPoint is not open or COM automation is unavailable.' }
-$selectedBackend = if ($powerPointRegistered) { 'powerpoint-live-com' } elseif ($wpsRegistered) { 'wps-live-com-experimental' } else { 'editable-ooxml-saved-pptx' }
-
-$apiAuthenticated = $null
-if ($VerifyApi) {
-    $verification = & (Join-Path $skillRoot 'scripts\xiaomiao.ps1') verify
-    $apiAuthenticated = $verification.authenticated -eq $true
-    if (-not $apiAuthenticated) { throw 'Xiaomiao API authentication failed.' }
+if (-not $SkipIllustrator) {
+    $progIdKey = "Registry::HKEY_CLASSES_ROOT\Illustrator.Application.30"
+    if (Test-Path -LiteralPath $progIdKey) {
+        Add-Check "illustrator-2026" "PASS" "Illustrator.Application.30 is registered." $true
+    } else {
+        Add-Check "illustrator-2026" "FAIL" "Illustrator 2026 COM registration was not found." $true
+    }
+    $illustratorProcess = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match "Illustrator" }
+    if ($illustratorProcess) { Add-Check "illustrator-open" "PASS" "Illustrator is already running." $RequireIllustratorOpen.IsPresent }
+    elseif ($RequireIllustratorOpen) { Add-Check "illustrator-open" "FAIL" "Open Illustrator and the target document yourself." $true }
+    else { Add-Check "illustrator-open" "WARN" "Illustrator is not open; open it yourself before drawing." $false }
 }
 
-$result = [ordered]@{
-    ok = $true
-    skill = 'cell_gd'
-    powerPointRegistered = $powerPointRegistered
-    powerPointOpen = $powerPointOpen
-    wpsExperimentalRegistered = $wpsRegistered
-    selectedBackend = $selectedBackend
-    apiVerified = [bool]$VerifyApi
-    apiAuthenticated = $apiAuthenticated
+if (-not $SkipApi) {
+    if (-not (Test-Path -LiteralPath $SecretPath -PathType Leaf)) {
+        Add-Check "api-key" "FAIL" "DPAPI key file is missing. Run setup.ps1 and configure it interactively." $true
+    } else {
+        try {
+            $cipher = [IO.File]::ReadAllText($SecretPath, [Text.Encoding]::UTF8).Trim()
+            $secure = ConvertTo-SecureString $cipher
+            if ($secure.Length -gt 0) { Add-Check "api-key" "PASS" "DPAPI key is readable for the current Windows account." $true }
+            else { Add-Check "api-key" "FAIL" "DPAPI key is empty." $true }
+        } catch {
+            Add-Check "api-key" "FAIL" "DPAPI key cannot be decrypted by this Windows account." $true
+        }
+
+        if ($VerifyApi -and -not $fatal) {
+            $client = Join-Path $SkillRoot "scripts\xiaomiao.ps1"
+            try {
+                & $client verify -SecretPath $SecretPath | Out-Null
+                Add-Check "api-connection" "PASS" "Authenticated API probe succeeded." $true
+            } catch {
+                Add-Check "api-connection" "FAIL" $_.Exception.Message $true
+            }
+        }
+    }
 }
-if ($Json) { $result | ConvertTo-Json -Compress }
-else { Write-Output "DOCTOR_OK|skill=cell_gd|backend=$selectedBackend|powerpoint=$($powerPointRegistered.ToString().ToLowerInvariant())|powerpoint_open=$($powerPointOpen.ToString().ToLowerInvariant())|wps_experimental=$($wpsRegistered.ToString().ToLowerInvariant())|api_verified=$($VerifyApi.ToString().ToLowerInvariant())" }
+
+$summary = [pscustomobject]@{
+    product = "Cell-lct"
+    version = [string]$lock.release
+    ok = -not $fatal
+    checks = $results
+}
+
+if ($Json) {
+    $summary | ConvertTo-Json -Depth 5
+} else {
+    foreach ($item in $results) { Write-Output ("{0}|{1}|{2}" -f $item.status, $item.name, $item.message) }
+    Write-Output ("DOCTOR_{0}|version={1}" -f $(if ($fatal) { "FAIL" } else { "OK" }), $lock.release)
+}
+
+if ($fatal) { exit 1 }

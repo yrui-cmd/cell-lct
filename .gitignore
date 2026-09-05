@@ -1,22 +1,38 @@
-.tmp/
-.tmp-cache/
-.visibility-test*/
-.test-tmp/
-.dry-run/
-.dry-run-out/
-.release-tmp/
-dist/
-cell_gd-output/
-*.pptx
-*.ppt
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Local Codex and runtime state
+.codex/
+.codex_tmp/
+*.log
+
+# Generated artwork and private inputs
+output/
+private/
 *.ai
 *.png
 *.jpg
 *.jpeg
-*.webp
-*.pdf
+*.tif
+*.tiff
+
+# Credentials and local configuration
+.env
+.env.*
+*.key
+*.pem
 *.dpapi
-runtime-profile.json
-__pycache__/
-*.py[cod]
-~$*
+
+# Runtime caches and generated jobs
+.cell-lct-internal/
+.test-tmp/
+.dry-run/
+.dry-run-out/
+shibielujing*/
+
+# Release build staging and archives
+dist/
+.release-tmp/

@@ -1,29 +1,17 @@
-# 0.3.0 — cell_gd
-
-- Unify both distributions under cell_gd with user-selected PPT / Illustrator drawing.
-- Send original images directly to path recognition; remove text cleanup and reinsertion.
-- Preserve backend-specific rendering, cache schemas, ordering and post-processing.
-
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.1 - 2026-08-26
 
-- Use one reconstruction, text, SVG parsing, culling, cache, batching, and native-object contract on Windows and macOS.
-- Keep live PowerPoint COM drawing on Windows and add native editable OOXML output for saved PPTX files on macOS.
-- Add macOS Keychain credential storage, cross-platform installation, and diagnostics.
-- Move stable runtime values into `platform-contract.json`; remove frozen manifests and fixed-tag installation requirements.
-- Allow a user-supplied chat API key to be configured automatically through stdin without echoing it.
-- Add install-time OS, Python, PowerPoint/WPS, credential, and backend matching with a non-secret runtime profile.
-- Add automatic dependency installation and native editable OOXML fallback when live presentation automation is unavailable.
+- Added a mandatory confirmation gate before any image bytes are uploaded when the expected cost exceeds 1 credit.
+- Kept confirmation exclusively before upload; approved jobs continue through download without another prompt.
+- Added automated low-cost, blocked high-cost, and approved high-cost policy tests.
 
-## 0.1.1 - 2026-08-27
+## 0.2.0 - 2026-08-25
 
-- Describe the product consistently as live PowerPoint drawing rather than path presentation.
-- Rename drawing-cache state and runtime contract fields while preserving bottom-to-top editable drawing behavior.
-- Align the GitHub homepage with the established stable-plugin documentation structure.
-
-## 0.1.0 - 2026-08-27
-
-- Freeze the tested cell_gd PowerPoint drawing workflow.
-- Add live editable text, native freeform paths, single-cache drawing, hidden-path culling, and existing-slide protection.
-- Add locked dependencies, DPAPI credential storage, package tests, PowerPoint end-to-end tests, release ZIP, and SHA256 verification.
+- Promoted Cell-lct to a stable plugin release.
+- Added pinned Python and runtime dependency contracts.
+- Added one-command setup and standalone diagnostics.
+- Added Windows package and end-to-end tests plus opt-in Illustrator 2026 live testing.
+- Added Release ZIP and SHA256 generation.
+- Removed the Marketplace installation entry.
+- Preserved live text, single SVG parsing, one Illustrator connection, 20–50 path batching, and existing-canvas protection.
