@@ -1,5 +1,21 @@
 # Cell-lct
 
+The Skill and companion scripts in this repository are open source under the [MIT License](LICENSE), allowing modification and derivative work. Third-party API services are maintained by their providers.
+
+## New: optional AI hidden-watermark treatment in the drawing workflow
+
+The latest `main` integrates the independently open-source [cell_no_ai](https://github.com/yrui-cmd/cell_no_ai). After text cleanup, choose optional AI hidden-watermark treatment; the workflow downloads the processed image before vectorization, then restores editable text and creates native editable Adobe Illustrator artwork. Declining the treatment continues the original drawing workflow.
+
+Installation also installs or updates `cell_no_ai`, and new image-reconstruction jobs check its latest version automatically. Treatment is provided through a third-party API; effectiveness depends on the service output and verification results.
+
+Install from the latest `main` for this feature. The historical `v0.2.1` tag and ZIP described below do not include this update:
+
+```powershell
+git clone --branch main --depth 1 https://github.com/yrui-cmd/cell-lct.git
+Set-Location .\cell-lct
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
 Cell-lct `v0.2.1` is the stable Windows release for reconstructing editable scientific vectors and live SVG text in a user-opened Adobe Illustrator 2026 document through Codex Desktop.
 
 ## Stable-release contract

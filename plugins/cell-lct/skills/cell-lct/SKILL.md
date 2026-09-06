@@ -7,7 +7,13 @@ description: Create, reconstruct, and append editable scientific vector figures 
 
 Use one fixed workflow:
 
-`text manifest -> Image 2 text-only cleanup -> complete-reference vectorization -> live text merged into master SVG -> one-time geometry cache -> persistent Illustrator playback`
+`text manifest -> Image 2 text-only cleanup -> optional confirmed cell_no_ai treatment and result download -> complete-reference vectorization -> live text merged into master SVG -> one-time geometry cache -> persistent Illustrator playback`
+
+## Optional cell_no_ai integration
+
+For new raster reconstruction, read [references/optional-no-ai.md](references/optional-no-ai.md) after text cleanup and before path recognition. Install/update the sibling `cell_no_ai` dependency with `python scripts/sync_cell_no_ai.py` once per new raster job, then read its current `SKILL.md`; use the detected Python runtime. Installation of this skill should run the same dependency check. The dependency remains independently callable. Existing Illustrator/SVG edits, recoloring, approved vector input and resumed recognition jobs skip this branch.
+
+The additional treatment requires a successful live balance check, a displayed balance and 1-credit cost, and explicit authorization for this image. A yes branch must receive the processed image before recognition continues. Its feature introduction, balance, consent and result messages are exceptions to the brief public-response contract below. Never let that contract suppress a required notice or blocker.
 
 Read [references/workflow.md](references/workflow.md), [references/workflow-spec.md](references/workflow-spec.md), and [references/illustrator-runtime.md](references/illustrator-runtime.md) before execution.
 
@@ -35,7 +41,7 @@ Read [references/workflow.md](references/workflow.md), [references/workflow-spec
 1. Treat every newly uploaded PNG, JPEG, or WebP as a mandatory Cell-lct job. Do not replace the required fresh vector result with local image tracing, a built-in image generator, an old SVG, or a hand-authored substitute.
 2. Before any reference image is sent to the vector service, create a text manifest containing every visible text run's content, position, bounding box, font family, font size, font weight, color, rotation, alignment, opacity, z-index, and paint order.
 3. Use Codex Image 2 to remove text only from the complete reference. Preserve arrows and arrow tails, connectors, frames, coordinate axes, heatmaps, legends, scientific subjects, colors, spacing, and the complete layout.
-4. Send the complete text-cleaned reference through the bundled API adapter. Do not force per-subject uploads for a complete reference figure.
+4. Complete the optional no-ai branch, then send its selected cleaned or returned processed image through the bundled API adapter. Preserve the original text manifest for the merge. Do not force per-subject uploads for a complete reference figure.
 5. Merge the recorded text back into the returned vector as real editable SVG `<text>` elements at the original positions and z-order before the Master SVG is cached or drawn.
 6. For a text-only request, first create a clean flat-2D reference, then use the same workflow.
 7. For an already approved true-vector SVG, validate it and run `scripts/run_cell_lct.ps1` directly.
